@@ -6,10 +6,10 @@ from utils import *
 class Potential:
     def __init__ (self, directory):
         # Reads file.
-        userN = read_user_file(directory)
-        print directory, " #user = ", userN  # test
+        self.userN = read_user_file(directory)
+        print directory, " #user = ", self.userN  # test
 
-        self.friends = read_relation_file(directory, userN)
+        self.friends = read_relation_file(directory, self.userN)
         print directory, " friends of user #3995", self.friends[3995]  # test
 
         self.messages, self.category = read_message_file(directory)
