@@ -1,6 +1,8 @@
 
 # coding: utf-8
 
+# ### This version hasn't been neither COMPILED or UNIT-TESTED
+
 # In[20]:
 
 import pandas as pd
@@ -13,8 +15,10 @@ from pgmpy.inference import Sampling
 
 from utils import *
 
-### hash functions
-Note: rmax is a fixed value, which means max(itemID)
+
+# ### hash functions
+# Note: rmax is a fixed value, which means max(itemID)
+
 # In[21]:
 
 '''
@@ -100,7 +104,6 @@ def buildModel():
     G.add_nodes_from(countID, attriID)
     
     # is [1-p, p] in correct order
-    # can int and char mix-used
     for y, p in fh_dict.items():
         G.add_node(y)
         phi = Factor.Factor([y, attriID], [2, 1], [1-p[0], p[0]])
