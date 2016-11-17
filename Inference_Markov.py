@@ -1,198 +1,160 @@
 
 # coding: utf-8
 
-# In[ ]:
+# In[20]:
 
 import pandas as pd
 import numpy as np
 
-#from pgmpy.models import FactorGraph
 from pgmpy.models import MarkovModel
-#from pgmpy.models import BayesianModel
-#from pgmpy.factors.discrete import DiscreteFactor
 from pgmpy.factors import Factor
 
 from pgmpy.inference import Sampling
 
+from utils import *
 
-# In[40]:
+### hash functions
+Note: rmax is a fixed value, which means max(itemID)
+# In[21]:
 
-sampleN = 3
+'''
+def hash_agg(rID):
+    return rID * 5
 
+def hash_y(uID, rmax, rID):
+    return (uID * rmax + rID) * 5 + 1
 
-# In[41]:
+def hash_y_inv(rmax, hash_y):
+    return (((y-1)/5) % rmax, ((y-1)/5) / rmax)
 
-# userIDs: u[i]
-u = pd.read_csv("user_s.txt", header = None, skipinitialspace=True)
-user = u[0].as_matrix()
+def hash_uID(uID):
+    return (uID * 5 + 2)
 
-userN = len(user)
+def hash_rID(rID):
+    return (rID * 5 + 3)
 
-# userRelations (directed): relation[i][0] -> relation[i][1]
-r = pd.read_csv("relation_s.txt", sep = "\t", header = None, skipinitialspace=True)
-relationN = r.shape[0]
-relation = r.as_matrix()
+def hash_cID(cID):
+    return (cID * 5 + 4)
+'''
 
+def hash_y(uID, rmax, rID):
+    return (uID * rmax + rID)
 
-# msg: ownerUID, itemID, catID, linkCount => u(y_i), r(y_i), c(y_i), t(y_i)
-m = pd.read_csv("message_s.txt", sep = "\t", header = None, skipinitialspace=True)
-mN = m.shape[0]
-msg = m.as_matrix()
-
-rmax = max(m[1].unique())
-
-print(u)
-print(r)
-print(m)
-
-
-# In[42]:
-
-aggName = [rID * 5 for rID in m[1].unique()]
-yName = [(uID * rmax + rID) * 5 + 1 for uID in u[0].unique() for rID in m[1].unique() ]
-userName = [uID * 5 + 2 for uID in u[0].unique()]
-itemName = [rID * 5 + 3 for rID in m[1].unique()]
-catName = [cID * 5 + 4 for cID in m[2].unique()]
-
-aggN = len(aggName)
-yN = len(yName)
-userN = len(userName)
-itemN = len(itemName)
-catN = len(catName)
-
-print(aggName)
-print(yName)
-print(userName)
-print(itemName)
-print(catName)
-
-#print([(uID, rmax, rID, (uID * rmax + rID) * 5 + 1) for uID in u[0].unique() for rID in m[1].unique() ])
-
-
-# In[43]:
-
-# PGM - FactorGraph (undirected)
-#G = FactorGraph()
-#G = BayesianModel()
-G = MarkovModel()
-G.add_nodes_from(aggName)
-G.add_nodes_from(yName)
-G.add_nodes_from(itemName)
-G.add_nodes_from(userName)
-G.add_nodes_from(catName)
-print(G.check_model())
-
-
-# In[70]:
-
-PHI = {}
-for y in yName:
-    PHI[y] = []
-
-
-# In[111]:
-
-# count <-> candidate
-
-for tID in m[1].unique():
-    for uID in u[0].unique():
-        (a, b) = (tID * 5, (uID * rmax + tID) * 5 + 1)
-        # f[a][b][0][0/1]
-        phi = Factor.Factor([a, b], [1, 2], np.random.rand(2))
-        G.add_factors(phi)
-        PHI[b].append(phi)
-        G.add_edges_from([(a,b)])
-        
-print(G.check_model())
+# return (uID, rID)
+def hash_y_inv(rmax, hash_y):
+    return (hash_y / rmax, hash_y % rmax)
 
 
 
-# In[112]:
+# ## inference(fh_dict, g_dict)
+# 
+# ### ARG:
+# 1. hf_dict[hash_y] = (h(), f())  
+# 這些hash_y是要建node的  
+# 還有candidate to count的prob.  
+# 還有candidate to attribute的prob.  
+# 
+# 2. g_dict[(hash_yi, hash_y2)] = g()  
+# 這些pair是要建link的 還有candidate to candidate的prob.  
+# 
+# ### RET:
+# 1. prob_dict[hash_yi] = prob. got from inference
 
-# candidate <-> candidate
-for i in range(0, relationN):
-    #print(relation[i][0], relation[i][1])
-    for j in range(0, itemN):
-        for k in range(0, itemN):
-            (a, b) = ((relation[i][0] * rmax + m[1].unique()[j]) * 5 + 1, (relation[i][1] * rmax + m[1].unique()[j]) * 5 + 1)
-            # g[a][b][0/1][0/1]
-            phi = Factor.Factor([a, b], [2, 2], np.random.rand(4))
-            G.add_factors(phi)
-            PHI[a].append(phi)
-            PHI[b].append(phi)
-            
-            G.add_edges_from([(a, b)])
+# ### nodes
+# count layer: 1 node  
+# candidate layer: node就看2. 有多少個index  
+# attribute: 1 node  
+# 
+# ### links/factors
+# count(1 node) <-> candidate: one link per hash_yi  
+# candidate <-> candidate: see g_dict[(hash_yi, hash_y2)]  
+# candidate(1 node) <-> attribute: one link per hash_yi  
+# 
 
-print(G.check_model())
+# ### I need
+# userN: from user.txt  
+# sampleN: gibbs sampling times  
 
+# In[22]:
 
+# get userN
+def getUserN():
+    u = pd.read_csv("user.txt", header = None, skipinitialspace=True)
+    return u.shape[0]
 
-# In[113]:
-
-# attribute <-> candidate
-#print(r2u_dict)
-for i in range(0, mN):
-    (a, b, c, d) = ((msg[i][0] * rmax + msg[i][1]) * 5 + 1, msg[i][0] * 5 + 2, msg[i][1] * 5 + 3, msg[i][2] * 5 + 4)
-    # h[a][b][c][d][0/1]
-    phi = Factor.Factor([a, b, c, d], [2, 1, 1, 1], np.random.rand(2))
-    G.add_factors(phi)
-    PHI[a].append(phi)
-    G.add_edges_from([(a,b), (b,c), (c,d), (d, a), (a, c), (b, d)])
-
-print(G.check_model())
-
-
-
-# In[114]:
-
-print(PHI[21][1])
-
-
-# In[103]:
-
-# Sampling
-gibbs = Sampling.GibbsSampling(G)
-
-sam = gibbs.sample(size=sampleN)
-print(sam)
+# get item_list & cat_list
+def getRmax():
+    # msg: ownerUID, itemID, catID, linkCount => u(y_i), r(y_i), c(y_i), t(y_i)
+    m = pd.read_csv("message.txt", sep = "\t", header = None, skipinitialspace=True)
+    item_uniq = m[1].unique()
+    return max(item_uniq)
 
 
-# In[110]:
+# In[24]:
 
-print(sam.iloc[[sampleN-1]])
-
-print(sam[21].iloc[[sampleN-1]])
-
-
-# In[102]:
-
-print(aggName)
-print(yName)
-print(userName)
-print(itemName)
-print(catName)
-
-
-# In[87]:
-
-# Inference
-p = []
-for yi in yName:
-    up = 0
-    down = 0
-    for nb in G.markov_blanket(yi):
-        # only care the link between candidates when inferencing
-        if nb%5 == 1:
-            # g[yi][nb][yi=0 or 1][nb=sample_res]
-            down += g[yi][nb][0][sam[nb].iloc[[sampleN-1]]] + g[yi][nb][1][sam[nb].iloc[[sampleN-1]]]
-            up += g[yi][nb][1][sam[nb].iloc[[sampleN-1]]]
+def buildModel():
+    G = MarkovModel()
+    countID = userN * rmax + 100
+    attriID = userN * rmax + 101
     
-    p[yi] = up / down
+    G.add_nodes_from(countID, attriID)
+    
+    # is [1-p, p] in correct order
+    # can int and char mix-used
+    for y, p in fh_dict.items():
+        G.add_node(y)
+        phi = Factor.Factor([y, attriID], [2, 1], [1-p[0], p[0]])
+        G.add_factors(phi)
+        G.add_edges_from([(y, attriID)])
+        
+        phi = Factor.Factor([y, countID], [2, 1], [1-p[1], p[1]])
+        G.add_factors(phi)
+        G.add_edges_from([(y, countID)])
+        
+    for y_pair, p in g_dict.items():
+        phi = Factor.Factor([y_pair[0], y_pair[0]], [2, 2], [1-p, p, p, 1-p])
+        G.add_factors(phi)
+        G.add_edges_from([(y_pair[0], y_pair[0])])
+                            
 
-print(p[yi])
+    print(G.check_model())
+    return G
 
 
-# In[ ]:
+# In[25]:
+
+def GibbsInf(G, sampleN):
+    # Sampling
+    gibbs = Sampling.GibbsSampling(G)
+    sam = gibbs.sample(size=sampleN)
+    #print(sam)
+    #print(sam.iloc[[sampleN-1]])
+    #print(sam[21].iloc[[sampleN-1]])
+    
+    # Inference
+    p_dict = {}
+    for yi in fh_dict.keys():
+        v0 = 1
+        v1 = 1
+        for nb in G.markov_blanket(yi):
+            # only care the link between candidates when inferencing
+            if (nb != countID) & (nb != attriID):
+                # is this correct?
+                v0 *= g_dict[(yi, nb)] if (sam[nb].iloc[[sampleN-1]] == 0) else 1 - g_dict[(yi, nb)]
+                v1 *= g_dict[(yi, nb)] if (sam[nb].iloc[[sampleN-1]] == 1) else 1 - g_dict[(yi, nb)]
+
+        p_dict[yi] = v1 / (v0 + v1)
+        
+    return p_dict
 
 
+
+# In[23]:
+
+def inference(fh_dict, g_dict):
+    G = buildModel()
+    # sampleN=?
+    p_dict = GibbsInf(G, 3)
+    return p_dict
+    
 
