@@ -96,6 +96,6 @@ def hash_y(uID, rmax, rID):
 
 # return (uID, rID)
 def hash_y_inv(rmax, hash_y):
-	return (hash_y / rmax, hash_y % rmax)
+	return (hash_y // rmax, hash_y % rmax)
         
 

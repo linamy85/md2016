@@ -3,7 +3,7 @@
 
 # ### This version hasn't been neither COMPILED or UNIT-TESTED
 
-# In[14]:
+# In[12]:
 
 import pandas as pd
 import numpy as np
@@ -12,6 +12,7 @@ from pgmpy.models import MarkovModel
 from pgmpy.factors import Factor
 
 from pgmpy.inference import Sampling
+from utils import *
 
 
 # ### nodes
