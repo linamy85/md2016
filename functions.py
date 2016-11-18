@@ -4,9 +4,12 @@
 HASH_N = 1000000
 
 from utils import *
+import os
 
 class Potential:
-    def __init__ (self, directory):
+    def __init__ (self, directory, famousN=20, mult=20):
+        self.dir = directory
+
         # Reads file.
         self.userN = read_user_file(directory)
         print(directory, " #user = ", self.userN)  # test
@@ -17,6 +20,11 @@ class Potential:
         self.owned, self.messages, self.category = read_message_file(
             directory, self.userN)
         print(directory, " meta of item #104", self.messages[104])  # test
+
+        if not os.path.isfile(os.path.join(directory, 'node.txt')):
+            print("node.txt does not exists in", directory, ", dumping it") 
+            self.dump_baseline_layer2(famousN, mult)
+        print("Done initialization.")
 
     # @param y :: (user, item)
     def fp (self, y):
@@ -64,7 +72,11 @@ class Potential:
     # @param mult    : take pre-(N * link)th active user in following case:
     #                   1. item's owner & friend
     #                   2. item's category's owner
-    def baseline_layer2(self, famousN=20, mult=20):
+    def dump_baseline_layer2(self, famousN=20, mult=20, filename="node.txt"):
+        if os.path.isfile(os.path.join(self.dir, filename)):
+            print(filename, " exists, please remove it first.")
+            return None
+        
         ans = []
         
         sort_key = (lambda u: len(self.friends[u]) + len(self.owned[u]))
@@ -103,7 +115,13 @@ class Potential:
             ans.append(users)
             if item % 1000 == 0:
                 print("Baseline: ", 100 * item / len(self.messages))
-                
+
+        node_file = os.path.join(self.dir, filename)
+        with open(node_file, "w") as file:
+            for item in range(len(ans)):
+                file.write("%d %d\n" % (item, len(ans[item])))
+                for user in ans[item]:
+                    file.write("%d\n" % user)
         return ans
     
     def layer2(self):
@@ -118,11 +136,27 @@ class Potential:
                 ans[item] = ans[item] | self.category[c][1]
         return ans
 
+    def loadnodes(self, filename="node.txt"):
+        ans = []
+        node_file = os.path.join(self.dir, filename)
+        with open(node_file, "r") as file:
+            line = file.readline()
+            while line:
+                item, num = map(int, line.split())
+                ulist = []
+                for i in range(num):
+                    line = file.readline()
+                    user = int(line.split()[0])
+                    ulist.append(user)
+                ans.append(set(ulist))
+                line = file.readline()
+        return ans
+
 
     # nodes: list(set) :: nodes[item_id] = set(users to make node y)
     # links: dict(g)   :: links[(hash_y1, hash_y2)] = 8*g3 + 4*g2 + 2*g1 + 1*g0
-    def layer2_node_link(self, famousN=20, mult=20):
-        nodes = self.baseline_layer2(famousN, mult)
+    def layer2_node_link(self, famousN=20, mult=20, filename="node.txt"):
+        nodes = self.loadnodes(filename)
 
         ans = dict()
         for user in range(self.userN):
