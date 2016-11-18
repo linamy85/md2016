@@ -45,7 +45,7 @@ def buildModel(userN, rmax, y_list, y_pair_list):
     attriID = userN * rmax + 101
     
     G = MarkovModel()
-    G.add_nodes_from(countID, attriID)
+    G.add_nodes_from([countID, attriID])
     for y in y_list:
         G.add_node(y)
         G.add_edges_from([(y, attriID)])

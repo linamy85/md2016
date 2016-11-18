@@ -93,6 +93,7 @@ for n in range(loop_num):
     print('loop_num = ', n+1)
     P = two_stage_inference()
     print('two_stage_inference : Done')
+    
     # Compute h(y), temp_sum = sum h(y)
     temp_h_sum = 0
     for y in Y:
