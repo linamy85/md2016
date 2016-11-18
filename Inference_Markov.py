@@ -7,6 +7,7 @@
 
 import pandas as pd
 import numpy as np
+import sys
 
 from pgmpy.models import MarkovModel
 from pgmpy.factors import Factor
@@ -45,7 +46,7 @@ def buildModel(userN, rmax, y_list, y_pair_list):
     attriID = userN * rmax + 101
     
     G = MarkovModel()
-    G.add_nodes_from(countID, attriID)
+    G.add_nodes_from([countID, attriID])
     for y in y_list:
         G.add_node(y)
         G.add_edges_from([(y, attriID)])
@@ -61,7 +62,7 @@ def buildModel(userN, rmax, y_list, y_pair_list):
         phi = Factor.Factor([y_pair[0], y_pair[1]], [2, 2], np.random.rand(4))
         G.add_factors(phi)
         
-    print(G.check_model())
+    #print(G.check_model())
     return G
 
 
@@ -104,7 +105,7 @@ def factor_assign_values(G, refreshAll, fh_dict, g_dict):
 
         if(len(Factors) != index):
             print('assign wrongly!')
-            sys.exit(0)
+
     else: 
         #only refresh h
         for y, p in fh_dict.items():
@@ -115,7 +116,7 @@ def factor_assign_values(G, refreshAll, fh_dict, g_dict):
 
 # In[22]:
 
-def GibbsInf(G, sampleN):
+def GibbsInf(G, countID, attriID, fh_dict, g_dict, sampleN):
     # Sampling
     gibbs = Sampling.GibbsSampling(G)
     sam = gibbs.sample(size=sampleN)
@@ -131,9 +132,13 @@ def GibbsInf(G, sampleN):
         for nb in G.markov_blanket(yi):
             # only care the link between candidates when inferencing
             if (nb != countID) & (nb != attriID):
-                # is this correct?
-                v0 *= g_dict[(yi, nb)] if (sam[nb].iloc[[sampleN-1]] == 0) else 1 - g_dict[(yi, nb)]
-                v1 *= g_dict[(yi, nb)] if (sam[nb].iloc[[sampleN-1]] == 1) else 1 - g_dict[(yi, nb)]
+                if (yi, nb) in g_dict:
+                    v0 *= g_dict[(yi, nb)] if (sam[nb][sampleN-1] == 0) else (1 - g_dict[(yi, nb)])
+                    v1 *= g_dict[(yi, nb)] if (sam[nb][sampleN-1] == 1) else (1 - g_dict[(yi, nb)])
+                else:
+                    v0 *= g_dict[(nb, yi)] if (sam[nb][sampleN-1] == 0) else (1 - g_dict[(nb, yi)])
+                    v1 *= g_dict[(nb, yi)] if (sam[nb][sampleN-1] == 1) else (1 - g_dict[(nb, yi)])
+                
 
         p_dict[yi] = v1 / (v0 + v1)
         
@@ -142,14 +147,16 @@ def GibbsInf(G, sampleN):
 
 # In[23]:
 
-def inference(G, refreshAll, fh_dict, g_dict, sampleN):
+def inference(G, userN, rmax, refreshAll, fh_dict, g_dict, sampleN):
     factor_assign_values(G, refreshAll, fh_dict, g_dict)
-    p_dict = GibbsInf(G, sampleN)
+    countID = userN * rmax + 100
+    attriID = userN * rmax + 101
+    p_dict = GibbsInf(G, countID, attriID, fh_dict, g_dict, sampleN)
+    print(p_dict)
     return G, p_dict
     
 
 
 # In[ ]:
-
 
 
