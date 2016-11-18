@@ -32,8 +32,9 @@ def two_stage_inference():
 
     # fh_dict(hashed_y) = [f(y), h(y)]  <=  this is a list instead of a tuple since only h(y) needs to change in stage 2
     global fh_dict
-    fh_dict = {hash_y(y[0], itemN, y[1]) : [(ptop(np.dot(fp_array[i], alpha)), 1)] for i, y in enumerate(Y)}
+    fh_dict = {hash_y(y[0], itemN, y[1]) : [ptop(np.dot(fp_array[i], alpha)), 1] for i, y in enumerate(Y)}
 
+    global G
     # inference stage 1
     G, P = inference(G, data.userN, itemN, True, fh_dict, g_dict, converge_num)
 
@@ -85,6 +86,7 @@ theta = np.array([alpha, beta, gamma])
 # Build graph G
 gp_dict = links
 del links
+
 G = buildModel(data.userN, itemN, [hash_y(y[0], itemN, y[1]) for y in Y], gp_dict.keys())
 print('Build graph : Done')
 
