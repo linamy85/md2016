@@ -90,6 +90,12 @@ def read_message_file (dir, userN):
 
     return owned, messages, category 
 
-            
+# return hashed_y
+def hash_y(uID, rmax, rID):            
+	return (uID * rmax + rID)
+
+# return (uID, rID)
+def hash_y_inv(rmax, hash_y):
+	return (hash_y / rmax, hash_y % rmax)
         
 
