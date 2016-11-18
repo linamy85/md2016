@@ -3,7 +3,7 @@
 
 # ### This version hasn't been neither COMPILED or UNIT-TESTED
 
-# In[12]:
+# In[19]:
 
 import pandas as pd
 import numpy as np
@@ -12,7 +12,6 @@ from pgmpy.models import MarkovModel
 from pgmpy.factors import Factor
 
 from pgmpy.inference import Sampling
-from utils import *
 
 
 # ### nodes
@@ -31,23 +30,6 @@ from utils import *
 # rmax  
 # sampleN: gibbs sampling times  
 
-# In[9]:
-
-'''
-# get userN
-def getUserN():
-    u = pd.read_csv("user.txt", header = None, skipinitialspace=True)
-    return u.shape[0]
-
-# get rmax
-def getRmax():
-    # msg: ownerUID, itemID, catID, linkCount => u(y_i), r(y_i), c(y_i), t(y_i)
-    m = pd.read_csv("message.txt", sep = "\t", header = None, skipinitialspace=True)
-    item_uniq = m[1].unique()
-    return max(item_uniq)
-'''
-
-
 # # buildModel (userN, rmax, y_list, y_pair_list)
 # 
 # G = buildModel(y_list, y_pair_list)  
@@ -55,7 +37,7 @@ def getRmax():
 # Build nodes, edges, factors with random values  
 # Return an MM model
 
-# In[15]:
+# In[20]:
 
 def buildModel(userN, rmax, y_list, y_pair_list):
     
@@ -102,7 +84,7 @@ def buildModel(userN, rmax, y_list, y_pair_list):
 # ### RET:
 # 1. prob_dict[hash_yi] = prob. got from inference
 
-# In[11]:
+# In[21]:
 
 def factor_assign_values(G, refreshAll, fh_dict, g_dict):
     Factors = G.get_factors()
@@ -131,7 +113,7 @@ def factor_assign_values(G, refreshAll, fh_dict, g_dict):
             
 
 
-# In[12]:
+# In[22]:
 
 def GibbsInf(G, sampleN):
     # Sampling
@@ -158,12 +140,11 @@ def GibbsInf(G, sampleN):
     return p_dict
 
 
-# In[13]:
+# In[23]:
 
-def inference(G, refreshAll, fh_dict, g_dict):
+def inference(G, refreshAll, fh_dict, g_dict, sampleN):
     factor_assign_values(G, refreshAll, fh_dict, g_dict)
-    # sampleN=?
-    p_dict = GibbsInf(G, 3)
+    p_dict = GibbsInf(G, sampleN)
     return G, p_dict
     
 
