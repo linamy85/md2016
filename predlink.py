@@ -35,14 +35,14 @@ def two_stage_inference():
     fh_dict = {hash_y(y[0], itemN, y[1]) : [(ptop(np.dot(fp_array[i], alpha)), 1)] for i, y in enumerate(Y)}
 
     # inference stage 1
-    G, P = inference(G, True, fh_dict, g_dict, converge_num)
+    G, P = inference(G, data.userN, itemN, True, fh_dict, g_dict, converge_num)
 
     # Compute h(y) in stage 2 and modify fh_dict
     for y in Y:
         fh_dict[hash_y(y[0], itemN, y[1])][1] = 1 - (data.messages[y[1]][2] - sum(map(lambda yp: P[hash_y(yp[0], itemN, yp[1])] if yp[1] == y[1] else 0, Y))) / data.userN
 
     # inference stage 2 only needs 
-    G, P = inference(G, False, fh_dict, False, converge_num)
+    G, P = inference(G, data.userN, itemN, False, fh_dict, False, converge_num)
     return P
 
 # start of _main_
@@ -58,11 +58,10 @@ pred_file = os.path.join(directory, 'pred.id')
 with open(pred_file, "r") as f:
     T = len(f.readlines())
 T = T // 2
-
-# item number
-itemN = len(data.messages)
+print('T = ', T)
 
 data = Potential(directory)
+itemN = data.itemN
 nodes, links = data.layer2_node_link()
 
 # Determine required yi = (ui, ri) and store as a list Y
@@ -84,15 +83,17 @@ theta = np.array([alpha, beta, gamma])
 # Build graph G
 gp_dict = links
 del links
-G = buildModel(userN, itemN, [y_hash(y[0], itemN, y[1]) for y in Y], gp_dict.keys())
+G = buildModel(data.userN, itemN, [hash_y(y[0], itemN, y[1]) for y in Y], gp_dict.keys())
+print('Build graph : Done')
 
 # Repeat until converge
 for n in range(loop_num):
     
     # Run two-stage inference algorithm to obtain P(yi=1) for all yi, return as a dictionary P
-
+    print('loop_num = ', n+1)
     P = two_stage_inference()
-    
+    print('two_stage_inference : Done')
+
     # Compute h(y), temp_sum = sum h(y)
     temp_h_sum = 0
     for y in Y:
@@ -141,6 +142,7 @@ for n in range(loop_num):
         theta_next += eta * dO_dtheta
 
     theta = theta_next
+    print('theta = ', theta)
 
 # Run inference method using final theta to obtain P(yi=1) for all yi, return as a dictionary P
 P = two_stage_inference()

@@ -1,8 +1,6 @@
 # This file is the module for all potential functions.
 # Author: Amy Lin
 
-HASH_N = 1000000
-
 from utils import *
 import os
 
@@ -20,6 +18,8 @@ class Potential:
         self.owned, self.messages, self.category = read_message_file(
             directory, self.userN)
         print(directory, " meta of item #104", self.messages[104])  # test
+
+        self.itemN = len(self.messages)
 
         if not os.path.isfile(os.path.join(directory, 'node.txt')):
             print("node.txt does not exists in", directory, ", dumping it") 
@@ -166,13 +166,13 @@ class Potential:
                 # (user, i1) not node.
                 if user not in nodes[i1]:
                     continue
-                hash1 = user * HASH_N + i1
+                hash1 = hash_y(user, self.itemN, i1)
 
                 for i2 in self.owned[user]:
                     # (user, i2) not node.
                     if user not in nodes[i2]:
                         continue
-                    hash2 = user * HASH_N + i2
+                    hash2 = hash_y(user, self.itemN, i2)
 
                     pair = (hash1, hash2) if (hash1 < hash2) else (hash2, hash1)
                     if (i1 != i2) and (pair not in ans):
@@ -188,13 +188,13 @@ class Potential:
                     # (user, i1) not node.
                     if user not in nodes[i1]:
                         continue
-                    hash1 = user * HASH_N + i1
+                    hash1 = hash_y(user, self.itemN, i1)
 
                     for i2 in self.owned[friend]:
                         # (user, i2) not node.
                         if user not in nodes[i2]:
                             continue
-                        hash2 = user * HASH_N + i2
+                        hash2 = hash_y(user, self.itemN, i2)
 
                         pair = (hash1, hash2) if (hash1 < hash2) else (hash2, hash1)
                         if (i1 != i2) and (pair not in ans):
@@ -205,13 +205,13 @@ class Potential:
             for item in self.owned[user]:
                 if user not in nodes[item]:
                     continue
-                hash1 = user * HASH_N + item
+                hash1 = hash_y(user, self.itemN, item)
 
                 for cate in self.messages[item][1]:
                     for co in self.category[cate][2]:
                         if user not in nodes[co]:
                             continue
-                        hash2 = user * HASH_N + co
+                        hash2 = hash_y(user, self.itemN, co)
 
                         pair = (hash1, hash2) if (hash1 < hash2) else (hash2, hash1)
                         if (co != item) and (pair not in ans):
@@ -227,12 +227,12 @@ class Potential:
             for user in self.messages[item][0]:
                 if user not in nodes[item]:
                     continue
-                hash1 = user * HASH_N + item
+                hash1 = hash_y(user, self.itemN, item)
 
                 for friend in self.friends[user]:
                     if friend not in nodes[item]:
                         continue
-                    hash2 = friend * HASH_N + item
+                    hash2 = hash_y(friend, self.itemN, item)
 
                     pair = (hash1, hash2) if (hash1 < hash2) else (hash2, hash1)
                     if (pair not in ans):
