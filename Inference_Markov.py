@@ -3,7 +3,7 @@
 
 # ### This version hasn't been neither COMPILED or UNIT-TESTED
 
-# In[20]:
+# In[7]:
 
 import pandas as pd
 import numpy as np
@@ -19,27 +19,7 @@ from utils import *
 # ### hash functions
 # Note: rmax is a fixed value, which means max(itemID)
 
-# In[21]:
-
-'''
-def hash_agg(rID):
-    return rID * 5
-
-def hash_y(uID, rmax, rID):
-    return (uID * rmax + rID) * 5 + 1
-
-def hash_y_inv(rmax, hash_y):
-    return (((y-1)/5) % rmax, ((y-1)/5) / rmax)
-
-def hash_uID(uID):
-    return (uID * 5 + 2)
-
-def hash_rID(rID):
-    return (rID * 5 + 3)
-
-def hash_cID(cID):
-    return (cID * 5 + 4)
-'''
+# In[8]:
 
 def hash_y(uID, rmax, rID):
     return (uID * rmax + rID)
@@ -48,21 +28,6 @@ def hash_y(uID, rmax, rID):
 def hash_y_inv(rmax, hash_y):
     return (hash_y / rmax, hash_y % rmax)
 
-
-
-# ## inference(fh_dict, g_dict)
-# 
-# ### ARG:
-# 1. hf_dict[hash_y] = (h(), f())  
-# 這些hash_y是要建node的  
-# 還有candidate to count的prob.  
-# 還有candidate to attribute的prob.  
-# 
-# 2. g_dict[(hash_yi, hash_y2)] = g()  
-# 這些pair是要建link的 還有candidate to candidate的prob.  
-# 
-# ### RET:
-# 1. prob_dict[hash_yi] = prob. got from inference
 
 # ### nodes
 # count layer: 1 node  
@@ -77,16 +42,17 @@ def hash_y_inv(rmax, hash_y):
 
 # ### I need
 # userN: from user.txt  
+# rmax  
 # sampleN: gibbs sampling times  
 
-# In[22]:
+# In[9]:
 
 # get userN
 def getUserN():
     u = pd.read_csv("user.txt", header = None, skipinitialspace=True)
     return u.shape[0]
 
-# get item_list & cat_list
+# get rmax
 def getRmax():
     # msg: ownerUID, itemID, catID, linkCount => u(y_i), r(y_i), c(y_i), t(y_i)
     m = pd.read_csv("message.txt", sep = "\t", header = None, skipinitialspace=True)
@@ -94,37 +60,92 @@ def getRmax():
     return max(item_uniq)
 
 
-# In[24]:
+# # buildModel (y_list, y_pair_list)
+# 
+# G = buildModel(y_list, y_pair_list)  
+# 
+# Build nodes, edges, factors with random values  
+# Return an MM model
 
-def buildModel():
-    G = MarkovModel()
+# In[10]:
+
+def buildModel(y_list, y_pair_list):
+    
+    userN = getUserN()
+    rmax = getRmax()
     countID = userN * rmax + 100
     attriID = userN * rmax + 101
     
+    G = MarkovModel()
     G.add_nodes_from(countID, attriID)
-    
-    # is [1-p, p] in correct order
-    for y, p in fh_dict.items():
+    for y in y_list:
         G.add_node(y)
-        phi = Factor.Factor([y, attriID], [2, 1], [1-p[0], p[0]])
-        G.add_factors(phi)
         G.add_edges_from([(y, attriID)])
-        
-        phi = Factor.Factor([y, countID], [2, 1], [1-p[1], p[1]])
+        phi = Factor.Factor([y, attriID], [2, 1], np.random.rand(2))
         G.add_factors(phi)
+        
         G.add_edges_from([(y, countID)])
-        
-    for y_pair, p in g_dict.items():
-        phi = Factor.Factor([y_pair[0], y_pair[0]], [2, 2], [1-p, p, p, 1-p])
+        phi = Factor.Factor([y, countID], [2, 1], np.random.rand(2))
         G.add_factors(phi)
-        G.add_edges_from([(y_pair[0], y_pair[0])])
-                            
-
+        
+    for y_pair in y_pair_list:
+        G.add_edges_from([(y_pair[0], y_pair[1])])
+        phi = Factor.Factor([y_pair[0], y_pair[1]], [2, 2], np.random.rand(4))
+        G.add_factors(phi)
+        
     print(G.check_model())
     return G
 
 
-# In[25]:
+# ## inference(G, refreshAll, fh_dict, g_dict)
+# 
+# 更新fgh  
+# G, P = inference(G, True, fh_dict, g_dict)  
+# 只更新 h  
+# G, P = inference(G, False, fh_dict, False)  
+# 
+# ### ARG:
+# 1. hf_dict[hash_y] = (h(), f())  
+# 這些hash_y是要建node的  
+# 還有candidate to count的prob.  
+# 還有candidate to attribute的prob.  
+# 
+# 2. g_dict[(hash_yi, hash_y2)] = g()  
+# 這些pair是要建link的 還有candidate to candidate的prob.  
+# 
+# ### RET:
+# 1. prob_dict[hash_yi] = prob. got from inference
+
+# In[11]:
+
+def factor_assign_values(G, refreshAll, fh_dict, g_dict):
+    Factors = G.get_factors()
+    
+    if refreshAll:
+        index = 0
+        # assign new values to factors in the same order
+        for y, p in fh_dict.items():
+            Factors[index].values = np.array([[1-p[0]], [p[0]]])
+            index = index + 1
+            Factors[index].values = np.array([[1-p[1]], [p[1]]])
+            index = index + 1
+
+        for y_pair, p in g_dict.items():
+            Factors[index].values = np.array([[p, 1-p], [1-p, p]])
+            index = index + 1
+
+        if(len(Factors) != index):
+            print('assign wrongly!')
+            sys.exit(0)
+    else: 
+        #only refresh h
+        for y, p in fh_dict.items():
+            index = index + 1
+            Factors[index].values = np.array([[1-p[1]], [p[1]]])
+            
+
+
+# In[12]:
 
 def GibbsInf(G, sampleN):
     # Sampling
@@ -151,13 +172,17 @@ def GibbsInf(G, sampleN):
     return p_dict
 
 
+# In[13]:
 
-# In[23]:
-
-def inference(fh_dict, g_dict):
-    G = buildModel()
+def inference(G, refreshAll, fh_dict, g_dict):
+    factor_assign_values(G, refreshAll, fh_dict, g_dict)
     # sampleN=?
     p_dict = GibbsInf(G, 3)
-    return p_dict
+    return G, p_dict
     
+
+
+# In[ ]:
+
+
 
