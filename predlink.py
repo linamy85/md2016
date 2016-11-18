@@ -35,20 +35,23 @@ def two_stage_inference():
     fh_dict = {hash_y(y[0], itemN, y[1]) : [(ptop(np.dot(fp_array[i], alpha)), 1)] for i, y in enumerate(Y)}
 
     # inference stage 1
-    G, P = inference(G, True, fh_dict, g_dict)
+    G, P = inference(G, True, fh_dict, g_dict, converge_num)
 
     # Compute h(y) in stage 2 and modify fh_dict
     for y in Y:
         fh_dict[hash_y(y[0], itemN, y[1])][1] = 1 - (data.messages[y[1]][2] - sum(map(lambda yp: P[hash_y(yp[0], itemN, yp[1])] if yp[1] == y[1] else 0, Y))) / data.userN
 
     # inference stage 2 only needs 
-    G, P = inference(G, False, fh_dict, False)
+    G, P = inference(G, False, fh_dict, False, converge_num)
     return P
 
 # start of _main_
-# python predlink.py $(directory) $(d) $(loop_num) $(eta) $(ptop function number)
-directory, d, loop_num, eta = sys.argv[1], float(sys.argv[2]), int(sys.argv[3]), float(sys.argv[4])
-ptop = ptop1 if int(sys.argv[5]) == 1 else ptop2
+# python predlink.py $(directory) $(ptop function number) $(loop_num) $(converge number) $(d) $(eta)
+directory               = sys.argv[1]
+ptop                    = ptop1 if int(sys.argv[2]) == 1 else ptop2
+loop_num, converge_num  = int(sys.argv[3]), int(sys.argv[4])
+d, eta                  = float(sys.argv[5]), float(sys.argv[6])
+
 
 # T = #(lines in pred.id) / 2
 pred_file = os.path.join(directory, 'pred.id')
