@@ -19,7 +19,7 @@ class Potential:
             directory, self.userN)
         print(directory, " meta of item #104", self.messages[104])  # test
 
-        self.itemN = len(data.messages)
+        self.itemN = len(self.messages)
 
         if not os.path.isfile(os.path.join(directory, 'node.txt')):
             print("node.txt does not exists in", directory, ", dumping it") 
