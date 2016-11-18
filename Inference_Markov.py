@@ -3,7 +3,7 @@
 
 # ### This version hasn't been neither COMPILED or UNIT-TESTED
 
-# In[7]:
+# In[14]:
 
 import pandas as pd
 import numpy as np
@@ -12,21 +12,6 @@ from pgmpy.models import MarkovModel
 from pgmpy.factors import Factor
 
 from pgmpy.inference import Sampling
-
-from utils import *
-
-
-# ### hash functions
-# Note: rmax is a fixed value, which means max(itemID)
-
-# In[8]:
-
-def hash_y(uID, rmax, rID):
-    return (uID * rmax + rID)
-
-# return (uID, rID)
-def hash_y_inv(rmax, hash_y):
-    return (hash_y / rmax, hash_y % rmax)
 
 
 # ### nodes
@@ -47,6 +32,7 @@ def hash_y_inv(rmax, hash_y):
 
 # In[9]:
 
+'''
 # get userN
 def getUserN():
     u = pd.read_csv("user.txt", header = None, skipinitialspace=True)
@@ -58,21 +44,20 @@ def getRmax():
     m = pd.read_csv("message.txt", sep = "\t", header = None, skipinitialspace=True)
     item_uniq = m[1].unique()
     return max(item_uniq)
+'''
 
 
-# # buildModel (y_list, y_pair_list)
+# # buildModel (userN, rmax, y_list, y_pair_list)
 # 
 # G = buildModel(y_list, y_pair_list)  
 # 
 # Build nodes, edges, factors with random values  
 # Return an MM model
 
-# In[10]:
+# In[15]:
 
-def buildModel(y_list, y_pair_list):
+def buildModel(userN, rmax, y_list, y_pair_list):
     
-    userN = getUserN()
-    rmax = getRmax()
     countID = userN * rmax + 100
     attriID = userN * rmax + 101
     
