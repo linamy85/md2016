@@ -30,7 +30,7 @@ class Potential:
     def fp (self, y):
         pop = 0
         for c in self.messages[y[1]][1]:
-            print( y[1], "in cate ", c, " => ", self.category[c][0])
+            # print( y[1], "in cate ", c, " => ", self.category[c][0])
             pop += self.category[c][0]
         return (
             len(self.friends[y[0]]),                # user friendship
