@@ -28,7 +28,7 @@ def read_relation_file (dir, userN):
         while line:
             fr, to = map(int, line.split())
             list[fr].add(to)
-            list[to].add(fr)
+            # list[to].add(fr)
             line = file.readline()
 
     return list
@@ -36,9 +36,12 @@ def read_relation_file (dir, userN):
 # Returns 2 things:
 # 1. [set(owner), set(cate), link] of item
 # 2. [#item, set(owner)] of category :: number of items in the category.
-def read_message_file (dir):
+def read_message_file (dir, userN):
     messages = []
     category = []
+    owned = []
+    for u in range(userN):
+        owned.append(set())
 
     max_item = 0
     max_cate = 0 
@@ -61,28 +64,31 @@ def read_message_file (dir):
             messages.append([set(), set(), link])
 
         for c in range(max_cate + 1):
-            category.append([0, set()])
+            category.append([0, set(), set()])
 
-        print "Max item = ", max_item, " ; Max category = ", max_cate
+        print("Max item = ", max_item, " ; Max category = ", max_cate)
         sys.stdout.flush()
             
         count = 0
         line = file.readline()
-        print ">>> ", line
+        print(">>> ", line)
         while line:
             if not (count % 10000):
                 print("Message.txt ... ", line)
             user, item, cate, link = map(int, line.split())
+            owned[user].add(item)
+
             messages[item][0].add(user)
             messages[item][1].add(cate)
             messages[item][2] = link
 
             category[cate][0] += 1
             category[cate][1].add(user)
+            category[cate][2].add(item)
             line = file.readline()
             count += 1
 
-    return messages, category 
+    return owned, messages, category 
 
             
         
