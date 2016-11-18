@@ -83,15 +83,16 @@ theta = np.array([alpha, beta, gamma])
 # Build graph G
 gp_dict = links
 del links
-G = buildModel(userN, itemN, [y_hash(y[0], itemN, y[1]) for y in Y], gp_dict.keys())
+G = buildModel(data.userN, itemN, [hash_y(y[0], itemN, y[1]) for y in Y], gp_dict.keys())
+print('Build graph : Done')
 
 # Repeat until converge
 for n in range(loop_num):
     
     # Run two-stage inference algorithm to obtain P(yi=1) for all yi, return as a dictionary P
-
+    print('loop_num = ', n+1)
     P = two_stage_inference()
-    
+    print('two_stage_inference : Done')
     # Compute h(y), temp_sum = sum h(y)
     temp_h_sum = 0
     for y in Y:
@@ -140,6 +141,7 @@ for n in range(loop_num):
         theta_next += eta * dO_dtheta
 
     theta = theta_next
+    print('theta = ', theta)
 
 # Run inference method using final theta to obtain P(yi=1) for all yi, return as a dictionary P
 P = two_stage_inference()
