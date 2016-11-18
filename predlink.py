@@ -35,14 +35,14 @@ def two_stage_inference():
     fh_dict = {hash_y(y[0], itemN, y[1]) : [(ptop(np.dot(fp_array[i], alpha)), 1)] for i, y in enumerate(Y)}
 
     # inference stage 1
-    G, P = inference(G, True, fh_dict, g_dict, converge_num)
+    G, P = inference(G, data.userN, itemN, True, fh_dict, g_dict, converge_num)
 
     # Compute h(y) in stage 2 and modify fh_dict
     for y in Y:
         fh_dict[hash_y(y[0], itemN, y[1])][1] = 1 - (data.messages[y[1]][2] - sum(map(lambda yp: P[hash_y(yp[0], itemN, yp[1])] if yp[1] == y[1] else 0, Y))) / data.userN
 
     # inference stage 2 only needs 
-    G, P = inference(G, False, fh_dict, False, converge_num)
+    G, P = inference(G, data.userN, itemN, False, fh_dict, False, converge_num)
     return P
 
 # start of _main_
@@ -93,7 +93,7 @@ for n in range(loop_num):
     print('loop_num = ', n+1)
     P = two_stage_inference()
     print('two_stage_inference : Done')
-    
+
     # Compute h(y), temp_sum = sum h(y)
     temp_h_sum = 0
     for y in Y:
