@@ -58,11 +58,10 @@ pred_file = os.path.join(directory, 'pred.id')
 with open(pred_file, "r") as f:
     T = len(f.readlines())
 T = T // 2
-
-# item number
-itemN = len(data.messages)
+print('T = ', T)
 
 data = Potential(directory)
+itemN = data.itemN
 nodes, links = data.layer2_node_link()
 
 # Determine required yi = (ui, ri) and store as a list Y
