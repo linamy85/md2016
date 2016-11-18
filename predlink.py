@@ -46,11 +46,12 @@ def two_stage_inference():
     return P
 
 # start of _main_
-# python predlink.py $(directory) $(ptop function number) $(loop_num) $(converge number) $(d) $(eta)
+# python predlink.py $(directory) $(ptop function number) $(loop_num) $(converge number) $(d) $(eta) $(famousN) $(mult)
 directory               = sys.argv[1]
 ptop                    = ptop1 if int(sys.argv[2]) == 1 else ptop2
 loop_num, converge_num  = int(sys.argv[3]), int(sys.argv[4])
 d, eta                  = float(sys.argv[5]), float(sys.argv[6])
+famousN, mult           = int(sys.argv[7]), int(sys.argv[8])
 
 
 # T = #(lines in pred.id) / 2
@@ -60,7 +61,7 @@ with open(pred_file, "r") as f:
 T = T // 2
 print('T = ', T)
 
-data = Potential(directory)
+data = Potential(directory, famousN, mult)
 itemN = data.itemN
 nodes, links = data.layer2_node_link()
 
