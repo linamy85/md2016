@@ -13,12 +13,12 @@ def get_g_array(g):
     return np.array(g_list)
 
 # start of _main_
-# python predlink.py $(directory) $(loop_num) $(eta) $(famousN) $(mult) $(node_file)
+# python predlink.py $(directory) $(loop_num) $(theta) $(eta) $(famousN) $(mult) $(node_file)
 directory               = sys.argv[1]
 loop_num                = int(sys.argv[2])
-eta                     = float(sys.argv[3])
-famousN, mult           = int(sys.argv[4]), int(sys.argv[5])
-node_file               = sys.argv[6]
+theta, eta              = float(sys.argv[3]), float(sys.argv[4])
+famousN, mult           = int(sys.argv[5]), int(sys.argv[6])
+node_file               = sys.argv[7]
 
 
 data = Potential(directory, famousN, mult, filename = node_file)
@@ -37,7 +37,7 @@ del nodes
 fp_array = np.array([np.array(data.fp(y)) for y in Y])
 
 # Initialize all elements in theta to 1
-theta = np.array([ np.array([1, 1, 1]), np.array([1, 1, 1, 1]) ])
+theta = np.array([ np.array([theta, theta, theta]), np.array([theta, theta, theta, theta]) ])
 
 # Repeat until converge
 for n in range(loop_num):
@@ -81,7 +81,7 @@ for n in range(loop_num):
         denominator = 0
         for y in Y_upper:
             S_y = S[hash_y(y[0], itemN, y[1])]
-            print('thetaS =', sum(v_sum(theta * S_y)))
+            #print('thetaS =', sum(v_sum(theta * S_y)))
             exp_thetaS = exp(sum(v_sum(theta * S_y)))
             numerator += exp_thetaS * S_y
             denominator += exp_thetaS
@@ -102,8 +102,8 @@ for n in range(loop_num):
 
         theta_next += eta * dO_dtheta
 
-
-    theta = theta_next
+    temp = sum(v_sum(theta_next))
+    theta = theta_next * theta / temp
     print('theta = ', theta)
 
 
