@@ -3,6 +3,7 @@ from functions import *
 from math import exp
 import numpy as np
 import os
+import random
 
 # g = 8*g3 + 4*g2 + 2*g1 + 1*g0
 def get_g_array(g):
@@ -69,10 +70,9 @@ for n in range(loop_num):
 
     # For each item r in R, compute dO_dtheta and update theta
     theta_next = theta
-    for item_num, r in enumerate(data.messages):
-
-        if item_num % 1000 == 0:
-            print(100 * item_num / itemN, '% completed.')
+    for it in range(100):
+        item_num = random.randrange(itemN)
+        r = data.messages[item_num]
 
         Y_r = list(filter(lambda y: y[1] == item_num, Y))
         # Sort by P => Sort by f_dict + g_dict
@@ -128,7 +128,7 @@ for link, g in g_link_dict.items():
 # Sort by P and pred top T links
 with open(os.path.join(directory, 'pred.id'), "r") as f:
     temp_pred = [[x for x in (line.rstrip()).split(' ')] for line in f]
-pred = [(int(x[0]), int(x[1])) for x in temp_pred_list]
+pred = [(int(x[0]), int(x[1])) for x in temp_pred]
 
 sorted_pred = sorted(pred, key = (lambda yp: f_dict[hash_y(yp[0], itemN, yp[1])] + g_dict[hash_y(yp[0], itemN, yp[1])]), reverse = True)
 pred_dict = {y : (1 if i < T else 0) for i, y in enumerate(sorted_pred)}
