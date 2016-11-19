@@ -1,6 +1,7 @@
 import sys
 import os
 
+# python mycompare.py $(file_path)
 directory = sys.argv[1]
 
 file1 = os.path.join(directory, 'pred1.txt')
@@ -13,8 +14,12 @@ correct_count, total_count = 0, 0
 with open(file1, 'r') as f:
 	pred_links = [[int(x) for x in (line.rstrip()).split('\t')] for line in f]
 
-for pred_link in pred_links:
-	if pred_link[:2] is in links:
+l = len(pred_links)
+
+for i, pred_link in enumerate(pred_links):
+	if i % 1000 == 0:
+		print(100 * i / l, '% compared.')
+	if pred_link[:2] in links:
 		if pred_link[2] == 1:
 			correct_count += 1
 	else:
