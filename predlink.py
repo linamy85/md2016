@@ -33,7 +33,7 @@ def two_stage_inference():
     # fh_dict(hashed_y) = [f(y), h(y)]  <=  this is a list instead of a tuple since only h(y) needs to change in stage 2
     global fh_dict
     fh_dict = {hash_y(y[0], itemN, y[1]) : [ptop(np.dot(fp_array[i], alpha)), 1] for i, y in enumerate(Y)}
-    
+
     # inference stage 1
     global G
     G, P = inference(G, data.userN, itemN, True, fh_dict, g_dict, converge_num)
