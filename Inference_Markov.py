@@ -44,25 +44,41 @@ def buildModel(userN, rmax, y_list, y_pair_list):
     
     countID = userN * rmax + 100
     attriID = userN * rmax + 101
+    print('start building model')
     
     G = MarkovModel()
     G.add_nodes_from([countID, attriID])
+
+    tmp = 0
+    print(len(y_list))
     for y in y_list:
+        tmp = tmp+1
         G.add_node(y)
         G.add_edges_from([(y, attriID)])
-        phi = Factor.Factor([y, attriID], [2, 1], np.random.rand(2))
+        phi = Factor([y, attriID], [2, 1], np.random.rand(2))
         G.add_factors(phi)
         
         G.add_edges_from([(y, countID)])
-        phi = Factor.Factor([y, countID], [2, 1], np.random.rand(2))
+        phi = Factor([y, countID], [2, 1], np.random.rand(2))
         G.add_factors(phi)
+
+        if (tmp % 1000 == 0):
+            print(tmp/len(y_list) * 100, "% completed")
+
+    print('finish adding nodes and layer1->2, 3->2 factors')
         
+    tmp = 0
+    print(len(y_pair_list))
     for y_pair in y_pair_list:
+        tmp = tmp+1
         G.add_edges_from([(y_pair[0], y_pair[1])])
-        phi = Factor.Factor([y_pair[0], y_pair[1]], [2, 2], np.random.rand(4))
+        phi = Factor([y_pair[0], y_pair[1]], [2, 2], np.random.rand(4))
         G.add_factors(phi)
+
+        if (tmp % 1000 == 0):
+            print(tmp/len(y_pair_list) * 100, "% completed")
         
-    #print(G.check_model())
+    print('check model:', G.check_model())
     return G
 
 
@@ -111,6 +127,8 @@ def factor_assign_values(G, refreshAll, fh_dict, g_dict):
         for y, p in fh_dict.items():
             index = index + 1
             Factors[index].values = np.array([[1-p[1]], [p[1]]])
+
+    print('assign new value: check model:', G.check_model())
             
 
 

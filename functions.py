@@ -5,8 +5,10 @@ from utils import *
 import os
 
 class Potential:
-    def __init__ (self, directory, famousN=20, mult=20):
+    def __init__ (self, directory, famousN=20, mult=20, filename="node.txt"):
         self.dir = directory
+
+        self.nodefile = filename
 
         # Reads file.
         self.userN = read_user_file(directory)
@@ -21,8 +23,8 @@ class Potential:
 
         self.itemN = len(self.messages)
 
-        if not os.path.isfile(os.path.join(directory, 'node.txt')):
-            print("node.txt does not exists in", directory, ", dumping it") 
+        if not os.path.isfile(os.path.join(directory, filename)):
+            print(filename, " does not exists in", directory, ", dumping it") 
             self.dump_baseline_layer2(famousN, mult)
         print("Done initialization.")
 
@@ -72,9 +74,9 @@ class Potential:
     # @param mult    : take pre-(N * link)th active user in following case:
     #                   1. item's owner & friend
     #                   2. item's category's owner
-    def dump_baseline_layer2(self, famousN=20, mult=20, filename="node.txt"):
-        if os.path.isfile(os.path.join(self.dir, filename)):
-            print(filename, " exists, please remove it first.")
+    def dump_baseline_layer2(self, famousN=20, mult=20):
+        if os.path.isfile(os.path.join(self.dir, self.nodefile)):
+            print(self.nodefile, " exists, please remove it first.")
             return None
         
         ans = []
@@ -116,7 +118,7 @@ class Potential:
             if item % 1000 == 0:
                 print("Baseline: ", 100 * item / len(self.messages))
 
-        node_file = os.path.join(self.dir, filename)
+        node_file = os.path.join(self.dir, self.nodefile)
         with open(node_file, "w") as file:
             for item in range(len(ans)):
                 file.write("%d %d\n" % (item, len(ans[item])))
@@ -136,9 +138,9 @@ class Potential:
                 ans[item] = ans[item] | self.category[c][1]
         return ans
 
-    def loadnodes(self, filename="node.txt"):
+    def loadnodes(self):
         ans = []
-        node_file = os.path.join(self.dir, filename)
+        node_file = os.path.join(self.dir, self.nodefile)
         with open(node_file, "r") as file:
             line = file.readline()
             while line:
@@ -155,8 +157,8 @@ class Potential:
 
     # nodes: list(set) :: nodes[item_id] = set(users to make node y)
     # links: dict(g)   :: links[(hash_y1, hash_y2)] = 8*g3 + 4*g2 + 2*g1 + 1*g0
-    def layer2_node_link(self, famousN=20, mult=20, filename="node.txt"):
-        nodes = self.loadnodes(filename)
+    def layer2_node_link(self, famousN=20, mult=20):
+        nodes = self.loadnodes()
 
         ans = dict()
         for user in range(self.userN):

@@ -32,9 +32,10 @@ def two_stage_inference():
 
     # fh_dict(hashed_y) = [f(y), h(y)]  <=  this is a list instead of a tuple since only h(y) needs to change in stage 2
     global fh_dict
-    fh_dict = {hash_y(y[0], itemN, y[1]) : [(ptop(np.dot(fp_array[i], alpha)), 1)] for i, y in enumerate(Y)}
-
+    fh_dict = {hash_y(y[0], itemN, y[1]) : [ptop(np.dot(fp_array[i], alpha)), 1] for i, y in enumerate(Y)}
+    
     # inference stage 1
+    global G
     G, P = inference(G, data.userN, itemN, True, fh_dict, g_dict, converge_num)
 
     # Compute h(y) in stage 2 and modify fh_dict
@@ -46,12 +47,13 @@ def two_stage_inference():
     return P
 
 # start of _main_
-# python predlink.py $(directory) $(ptop function number) $(loop_num) $(converge number) $(d) $(eta) $(famousN) $(mult)
+# python predlink.py $(directory) $(ptop function number) $(loop_num) $(converge number) $(d) $(eta) $(famousN) $(mult) $(node_file)
 directory               = sys.argv[1]
 ptop                    = ptop1 if int(sys.argv[2]) == 1 else ptop2
 loop_num, converge_num  = int(sys.argv[3]), int(sys.argv[4])
 d, eta                  = float(sys.argv[5]), float(sys.argv[6])
 famousN, mult           = int(sys.argv[7]), int(sys.argv[8])
+node_file               = sys.argv[9]
 
 
 # T = #(lines in pred.id) / 2
@@ -61,7 +63,7 @@ with open(pred_file, "r") as f:
 T = T // 2
 print('T = ', T)
 
-data = Potential(directory, famousN, mult)
+data = Potential(directory, famousN, mult, filename = node_file)
 itemN = data.itemN
 nodes, links = data.layer2_node_link()
 
@@ -84,6 +86,7 @@ theta = np.array([alpha, beta, gamma])
 # Build graph G
 gp_dict = links
 del links
+
 G = buildModel(data.userN, itemN, [hash_y(y[0], itemN, y[1]) for y in Y], gp_dict.keys())
 print('Build graph : Done')
 
