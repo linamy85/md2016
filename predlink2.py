@@ -64,9 +64,15 @@ for n in range(loop_num):
 
     v_sum = np.vectorize(sum)
 
+    print('Compute S : done')
+    print('Start updating theta')
+
     # For each item r in R, compute dO_dtheta and update theta
     theta_next = theta
     for item_num, r in enumerate(data.messages):
+
+        if item_num % 1000 == 0:
+            print(100 * item_num / itemN, '% completed.')
 
         Y_r = list(filter(lambda y: y[1] == item_num, Y))
         # Sort by P => Sort by f_dict + g_dict

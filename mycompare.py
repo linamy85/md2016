@@ -3,7 +3,7 @@ import os
 
 directory = sys.argv[1]
 
-file1 = os.path.join(directory, 'pred.id')
+file1 = os.path.join(directory, 'pred1.txt')
 file2 = os.path.join(directory, 'response.txt')
 
 with open(file2, 'r') as f:
