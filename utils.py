@@ -64,7 +64,7 @@ def read_message_file (dir, userN):
             messages.append([set(), set(), link])
 
         for c in range(max_cate + 1):
-            category.append([0, set(), set()])
+            category.append([0, set(), set(), 0])
 
         print("Max item = ", max_item, " ; Max category = ", max_cate)
         sys.stdout.flush()
@@ -85,10 +85,28 @@ def read_message_file (dir, userN):
             category[cate][0] += 1
             category[cate][1].add(user)
             category[cate][2].add(item)
+            category[cate][3] += link
+
             line = file.readline()
             count += 1
 
     return owned, messages, category 
+
+def read_pred_file(dir):
+    pred_file = os.path.join(dir, "pred.id")
+    target = dict()
+    with open(pred_file, "r") as file:
+        line = file.readline()
+        while line:
+            user, item, _ = line.split()
+            user = int(user)
+            item = int(item)
+            if item not in target:
+                target[item] = set()
+
+            target[item].add(user)
+            line = file.readline()
+    return target
 
 # return hashed_y
 def hash_y(uID, rmax, rID):            

@@ -17,6 +17,14 @@ class Potential:
         self.friends = read_relation_file(directory, self.userN)
         print(directory, " friends of user #3995", self.friends[3995])  # test
 
+        # Find the maximum of friends, to normalize "user friendship" feature.
+        self.max_friend = 0
+        for u in range(self.userN):
+            self.max_friend = max(
+                len(self.friends[u]),
+                self.max_friend
+            )
+
         self.owned, self.messages, self.category = read_message_file(
             directory, self.userN)
         print(directory, " meta of item #104", self.messages[104])  # test
@@ -31,13 +39,16 @@ class Potential:
     # @param y :: (user, item)
     def fp (self, y):
         pop = 0
+        links = 0
         for c in self.messages[y[1]][1]:
             # print( y[1], "in cate ", c, " => ", self.category[c][0])
-            pop += self.category[c][0]
+            pop = max(pop, self.category[c][0])
+            links = max(links, self.category[c][3] / self.category[c][0])
         return (
-            len(self.friends[y[0]]),                # user friendship
-            int(y[0] in self.messages[y[1]][0]),    # item ownership
-            pop                                     # category popularity
+            len(self.friends[y[0]]) / self.max_friend,  # user friendship
+            int(y[0] in self.messages[y[1]][0]),        # item ownership
+            pop,                                        # category popularity
+            links                                       # max category avg links 
         )
 
     def gp (self, y1, y2):
@@ -69,6 +80,37 @@ class Potential:
         if oi or fi or of or cc:
             return (oi, fi, of, cc)
         return None
+
+    # @param P: dict() :: P[hash(y)] = p(y=1)
+    def friendship_eval(self, P):
+        print("Start friendship evaluation.")
+        
+        # Initialize matrix
+        mat = []
+        for u in range(self.userN):
+            mat.append(dict())
+            for friend in self.friends[u]:
+                mat[u][friend] = [0, 0]
+
+        for hashed_y, p in P.items():
+            user, item = hash_y_inv(self.itemN, hashed_y) 
+            for friend in (self.friends[user] & self.messages[item][0]):
+                mat[user][friend][0] += p
+                mat[user][friend][1] += 1
+
+        result = dict()
+        for hashed_y, _ in P.items():
+            user, item = hash_y_inv(self.itemN, hashed_y) 
+            accu = 0
+            for friend in (self.friends[user] & self.messages[item][0]):
+                p, owners = mat[user][friend]
+                accu += p / owners
+
+            # more friends own this with higher friendship score => higher p
+            result[hashed_y] = accu
+
+        print("Friendship evaluation done.")
+        return result
 
     # @param famousN : to take pre-Nth active user in the network
     # @param mult    : take pre-(N * link)th active user in following case:
@@ -117,6 +159,13 @@ class Potential:
             ans.append(users)
             if item % 1000 == 0:
                 print("Baseline: ", 100 * item / len(self.messages))
+
+        print("Now load pred file.")
+        target = read_pred_file(self.dir)
+        for item, us in target.items():
+            ans[item] = ans[item] | us
+
+        print("Load prediction file as layer 2 target done.")
 
         node_file = os.path.join(self.dir, self.nodefile)
         with open(node_file, "w") as file:

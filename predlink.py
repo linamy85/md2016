@@ -1,4 +1,5 @@
 from functions import *
+#from Inference_Markov_github import *
 from Inference_Markov import *
 
 from math import exp
@@ -36,6 +37,7 @@ def two_stage_inference():
 
     # inference stage 1
     global G
+    print(g_dict)
     G, P = inference(G, data.userN, itemN, True, fh_dict, g_dict, converge_num)
 
     # Compute h(y) in stage 2 and modify fh_dict
@@ -43,7 +45,9 @@ def two_stage_inference():
         fh_dict[hash_y(y[0], itemN, y[1])][1] = 1 - (data.messages[y[1]][2] - sum(map(lambda yp: P[hash_y(yp[0], itemN, yp[1])] if yp[1] == y[1] else 0, Y))) / data.userN
 
     # inference stage 2 only needs 
-    G, P = inference(G, data.userN, itemN, False, fh_dict, False, converge_num)
+    #G, P = inference(G, data.userN, itemN, False, fh_dict, False, converge_num)
+    print(g_dict)
+    G, P = inference(G, data.userN, itemN, False, fh_dict, g_dict, converge_num)
     return P
 
 # start of _main_
@@ -79,7 +83,7 @@ del nodes
 fp_array = np.array([data.fp(y) for y in Y])
 
 # Initialize all elements in theta to 1
-alpha, beta, gamma = np.ones(3), np.ones(4), np.ones(1)
+alpha, beta, gamma = np.ones(4), np.ones(4), np.ones(1)
 theta = np.array([alpha, beta, gamma])
 
 
@@ -127,7 +131,7 @@ for n in range(loop_num):
         v_sum = np.vectorze(sum)
         theta_S = sum(v_sum(theta * S))
 
-        numerator = np.array([np.zeros(3), np.zeros(4), np.zeros(1)])
+        numerator = np.array([np.zeros(4), np.zeros(4), np.zeros(1)])
         denominator = 0
         for y in Y_upper:
             temp = exp(theta_S)
@@ -135,7 +139,7 @@ for n in range(loop_num):
             denominator += temp
         dO_dtheta = numerator / denominator
 
-        numerator = np.array([np.zeros(3), np.zeros(4), np.zeros(1)])
+        numerator = np.array([np.zeros(4), np.zeros(4), np.zeros(1)])
         denominator = 0
         for y in Y_lower:
             temp = exp(theta_S)

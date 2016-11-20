@@ -8,13 +8,16 @@
 import pandas as pd
 import numpy as np
 import sys
+import random
 
-from pgmpy.models import MarkovModel
-from pgmpy.factors import Factor
+#from pgmpy.models import MarkovModel
+from pgmpy_onGithub.pgmpy.models import MarkovModel
+#from pgmpy.factors import Factor
+from pgmpy_onGithub.pgmpy.factors.discrete import DiscreteFactor
 
-from pgmpy.inference import Sampling
+#from pgmpy.inference import Sampling
+from pgmpy_onGithub.pgmpy.sampling import Sampling
 
-from pgmpy.inference import Mplp
 
 # ### nodes
 # count layer: 1 node  
@@ -56,11 +59,11 @@ def buildModel(userN, rmax, y_list, y_pair_list):
         tmp = tmp+1
         G.add_node(y)
         G.add_edges_from([(y, attriID)])
-        phi = Factor.Factor([y, attriID], [2, 1], np.random.rand(2))
+        phi = DiscreteFactor([y, attriID], [2, 1], np.random.rand(2))
         G.add_factors(phi)
         
         G.add_edges_from([(y, countID)])
-        phi = Factor.Factor([y, countID], [2, 1], np.random.rand(2))
+        phi = DiscreteFactor([y, countID], [2, 1], np.random.rand(2))
         G.add_factors(phi)
 
         if (tmp % 1000 == 0):
@@ -73,7 +76,7 @@ def buildModel(userN, rmax, y_list, y_pair_list):
     for y_pair in y_pair_list:
         tmp = tmp+1
         G.add_edges_from([(y_pair[0], y_pair[1])])
-        phi = Factor.Factor([y_pair[0], y_pair[1]], [2, 2], np.random.rand(4))
+        phi = DiscreteFactor([y_pair[0], y_pair[1]], [2, 2], np.random.rand(4))
         G.add_factors(phi)
 
         if (tmp % 1000 == 0):
@@ -137,11 +140,13 @@ def factor_assign_values(G, refreshAll, fh_dict, g_dict):
 
 def GibbsInf(G, countID, attriID, fh_dict, g_dict, sampleN):
     # Sampling
+    print('inInf', G.check_model())
     gibbs = Sampling.GibbsSampling(G)
     sam = gibbs.sample(size=sampleN)
-    #print(sam)
+    print('sam: ', sam)
     #print(sam.iloc[[sampleN-1]])
     #print(sam[21].iloc[[sampleN-1]])
+    
     
     # Inference
     p_dict = {}
@@ -152,11 +157,18 @@ def GibbsInf(G, countID, attriID, fh_dict, g_dict, sampleN):
             # only care the link between candidates when inferencing
             if (nb != countID) & (nb != attriID):
                 if (yi, nb) in g_dict:
-                    v0 *= g_dict[(yi, nb)] if (sam[nb][sampleN-1] == 0) else (1 - g_dict[(yi, nb)])
-                    v1 *= g_dict[(yi, nb)] if (sam[nb][sampleN-1] == 1) else (1 - g_dict[(yi, nb)])
+                    #print(sam[nb][sampleN-1])
+                    rand = random.random() 
+                    v0 *= g_dict[(yi, nb)] if (rand == 0) else (1 - g_dict[(yi, nb)])
+                    v1 *= g_dict[(yi, nb)] if (rand == 1) else (1 - g_dict[(yi, nb)])
+                    #v0 *= g_dict[(yi, nb)] if (sam[nb][sampleN-1] == 0) else (1 - g_dict[(yi, nb)])
+                    #v1 *= g_dict[(yi, nb)] if (sam[nb][sampleN-1] == 1) else (1 - g_dict[(yi, nb)])
                 else:
-                    v0 *= g_dict[(nb, yi)] if (sam[nb][sampleN-1] == 0) else (1 - g_dict[(nb, yi)])
-                    v1 *= g_dict[(nb, yi)] if (sam[nb][sampleN-1] == 1) else (1 - g_dict[(nb, yi)])
+                    rand = random.random() 
+                    v0 *= g_dict[(nb, yi)] if (rand == 0) else (1 - g_dict[(nb, yi)])
+                    v1 *= g_dict[(nb, yi)] if (rand == 1) else (1 - g_dict[(nb, yi)])
+                    #v0 *= g_dict[(nb, yi)] if (sam[nb][sampleN-1] == 0) else (1 - g_dict[(nb, yi)])
+                    #v1 *= g_dict[(nb, yi)] if (sam[nb][sampleN-1] == 1) else (1 - g_dict[(nb, yi)])
                 
 
         p_dict[yi] = v1 / (v0 + v1)
