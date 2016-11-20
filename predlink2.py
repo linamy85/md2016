@@ -14,7 +14,7 @@ def get_g_array(g):
     return np.array(g_list)
 
 # start of _main_
-# python predlink.py $(directory) $(loop_num) $(theta) $(eta) $(famousN) $(mult) $(node_file) $(output_file)
+# python predlink.py $(directory) $(loop_num) $(theta) $(eta) $(famousN) $(mult) $(node_file) $(output_file) $(output_num)
 if __name__ == '__main__':
 
     directory               = sys.argv[1]
@@ -23,6 +23,7 @@ if __name__ == '__main__':
     famousN, mult           = int(sys.argv[5]), int(sys.argv[6])
     node_file               = sys.argv[7]
     output_file             = sys.argv[8]
+    output_num              = int(sys.argv[9])
 
 
     data = Potential(directory, famousN, mult, filename = node_file)
@@ -85,7 +86,7 @@ if __name__ == '__main__':
         print('Compute P : done')
 
         # pred
-        if(n % 2== 0):
+        if(n % output_num== 0):
             # Sort by P and pred top T links
             sorted_pred = sorted(pred, key = (lambda yp: P[hash_y(yp[0], itemN, yp[1])] if hash_y(yp[0], itemN, yp[1]) in P.keys() else -1), reverse = True)
             pred_dict = {y : (1 if i < T else 0) for i, y in enumerate(sorted_pred)}
