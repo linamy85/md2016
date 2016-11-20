@@ -1,6 +1,7 @@
 import sys
 import os
 
+# python mycompare.py $(file_path)
 directory = sys.argv[1]
 pred_file = sys.argv[2]
 

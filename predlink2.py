@@ -44,7 +44,6 @@ if __name__ == '__main__':
     theta = np.array([ np.array([theta] * 4), np.array([theta] * 4) ])
 
     v_sum = np.vectorize(sum)
-    
 
     # f_dict[hashed_y] = f(y)
     f_dict = {hash_y(y[0], itemN, y[1]) : fp_array[i] for i, y in enumerate(Y)}
@@ -65,9 +64,6 @@ if __name__ == '__main__':
         hashed = hash_y(y[0], itemN, y[1])
         S[hashed] = np.array([f_dict[hashed], g_dict[hashed]])
     print('Compute S : done')
-    print(S[hashed])
-    print(np.sum(np.concatenate(S[hashed] * theta)))
-
 
     with open(os.path.join(directory, 'pred.id'), "r") as f:
         T = len(f.readlines())
@@ -86,6 +82,8 @@ if __name__ == '__main__':
         # P = {key : sum(v_sum(theta * S_value)) for key, S_value in S.items()}
         P = {key : np.sum(np.concatenate(theta * S_value)) for key, S_value in S.items()}
         
+        print('Compute P : done')
+
         # pred
         if(n % 2== 0):
             # Sort by P and pred top T links
@@ -97,7 +95,6 @@ if __name__ == '__main__':
                     f.write(str(pred[i][0]) + ' ' + str(pred[i][1]) + ' ' + str(pred_dict[pred[i]]) + '\n')
             print('Ouput to file', output_file + str(n), ': done'  )
 
-        print('Compute P : done')
 
         # For each item r in R, compute dO_dtheta and update theta
         theta_next = theta
@@ -143,4 +140,3 @@ if __name__ == '__main__':
         temp = np.sum(np.concatenate(theta_next))
         theta = theta_next * theta / temp
         print('theta = ', theta)
-
