@@ -1,5 +1,6 @@
 #!/bin/bash
 
+export SCRIPT=$HOME/md2016/hw3/script
 
 echo "Usage: $0 [directory] [new directory] [time] [execution......]"
 
@@ -21,7 +22,7 @@ do
   echo "Validation #$i"
 
   # read line and write to $NEW_DIR/test.txt & cross.txt
-  python generate_valid.py $1 $2
+  python $SCRIPT/generate_valid.py $1 $2
 
   # execute
   echo "Execute..."
@@ -40,10 +41,14 @@ do
   fi
 
   # calculate precision
-  RES=$(python scoring.py $2/test.txt $2/cross.txt)
+  RES=$(python $SCRIPT/scoring.py $2/test.txt $2/cross.txt)
 
-  echo $RES >> $2/cross.log
-  echo "Round $i : $RES"
+  $SCRIPT/mymf.sh $2/train.txt $2/test.txt $2/mf.out
+
+  MF_RES=$(python $SCRIPT/scoring.py $2/mf.out $2/cross.txt)
+
+  echo "$RES $MF_RES" >> $2/cross.log
+  echo "Round $i : $RES / MF: $MF_RES"
 
 done
 
@@ -51,7 +56,7 @@ echo "=========================="
 echo "Input: $1"
 echo "Output: $2"
 echo ""
-python simply_count.py $2/cross.log
+python $SCRIPT/simply_count.py $2/cross.log
 echo "=========================="
 
     
