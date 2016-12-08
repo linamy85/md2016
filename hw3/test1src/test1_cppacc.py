@@ -20,6 +20,13 @@ class Model:
         if len(sys.argv) < 2:
             print("Usage:", sys.argv[0], "[dir]")
             sys.exit(1)
+
+        self.rank = 40
+        if len(sys.argv) > 2:
+            self.rank = int(sys.argv[2])
+        self.iter = 100
+        if len(sys.argv) > 3:
+            self.iter = int(sys.argv[3])
         
         self.r1 = [[0 for i in range(N_USER)] for j in range(N_ITEM)]
         self.r2 = [[0 for i in range(N_USER)] for j in range(N_ITEM)]
@@ -29,15 +36,24 @@ class Model:
         # Run MF
         print "Running non-negative MF....", strftime(
             "%Y-%m-%d %H:%M:%S", gmtime())
-        modelnmf = nimfa.Nmf(self.r1, max_iter=100)
+        modelnmf = nimfa.Nmf(self.r1, rank=self.rank, max_iter=self.iter)
         model = modelnmf()
         print "Done MF!", strftime("%Y-%m-%d %H:%M:%S", gmtime())
+
+        # sm = model.summary()
+        # print('Sparseness Basis: %5.3f  Mixture: %5.3f' % (
+            # sm['sparseness'][0], sm['sparseness'][1]))
+        # print('Iterations: %d' % sm['n_iter'])
+        # print('Target estimate:\n%s' % np.dot(
+            # model.basis().todense(), model.coef().todense()))
+
         source_result = np.array(model.fitted())
 
         # Turn vector of per user into distribution
         # And calculate the dot similarity
         # Then find the best data
-        print("Transfer user vector into distribution.")
+        print("Transfer user vector into distribution.",
+              strftime("%Y-%m-%d %H:%M:%S", gmtime()))
 
         item_pdf1 = []
         for i in range(N_ITEM):
@@ -52,7 +68,7 @@ class Model:
                 if t < 1e-4:
                     continue
 
-                idx = min(math.floor(t / 0.1), 10)
+                idx = min(int(math.floor(t / 0.1)), 10)
                 pdf[idx] += 1
                 count += 1
             if count > 1:
@@ -67,30 +83,41 @@ class Model:
             for j in range(N_USER):
                 if self.r2[i][j] > 0:
                     count += 1
-                    pdf[ math.floor(self.r2[i][j] / 0.1) ] += 1
+                    pdf[ int(math.floor(self.r2[i][j] / 0.1)) ] += 1
             if count > 1:
                 pdf = pdf / count
             item_pdf2.append(pdf)
 
         # Transform now for further use: matrix[user]
-        self.r1 = self.r1.T
-        self.r2 = self.r2.T
+        # self.r1 = self.r1.T
+        # self.r2 = self.r2.T
 
 
         print "Calculate cost matrix....", strftime(
             "%Y-%m-%d %H:%M:%S", gmtime())
         # Calculate cost matrix for items
         # matrix[item r1][item r2]
-        matrix = []
-        for i in range(N_ITEM):
-            l = np.array([
-                matrix[j][i] if j < i
-                else 10000 if j == i
-                else mean_squared_error(item_pdf1[i], item_pdf2[j])
-                for j in range(N_ITEM)
-            ])
-            matrix.append(l)
-        matrix = np.array(matrix)
+
+        # Uses 5 threads to run this slowest part.
+        partition = 5
+        matrix = [[] for i in range(partition)] 
+
+        threads = []
+        ll = np.split(np.array(range(N_ITEM)), partition)
+        for index in range(partition):
+            thread = Thread(
+                target = self.threadFunc, args = (
+                    matrix[index], ll[index], item_pdf1, item_pdf2)
+            )
+            threads.append(thread)
+            thread.start()
+
+        for thread in threads:
+            thread.join()
+        
+        matrix = np.array(np.concatenate(matrix, axis=0))
+
+        print "Matrix shape: ", matrix.shape
 
         print "Hungarian running maximum matching....", strftime(
             "%Y-%m-%d %H:%M:%S", gmtime())
@@ -117,6 +144,16 @@ class Model:
         # model = nimfa.Nmf(self.r2, max_iter=200)
 
         # self.result = np.array(model().fitted())
+
+    def threadFunc (self, matrix, list, item_pdf1, item_pdf2):
+        for i in list:
+            l = np.array([
+                mean_squared_error(
+                    item_pdf1[i], item_pdf2[j]
+                ) for j in range(N_ITEM)
+            ])
+            matrix.append(l)
+
 
     def writeTrans (self, trans):
         tran_file = os.path.join(sys.argv[1], "tran.txt")

@@ -19,7 +19,7 @@ if __name__ == '__main__':
 
     line = original.readline()
     while line:
-        if random.random() < 0.1:  # test
+        if random.random() < 0.2:  # test
             l = line.split()
             new_test.write("%s %s ?\n" % (l[0], l[1]))
             new_pred.write(line)

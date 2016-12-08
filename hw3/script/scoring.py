@@ -12,10 +12,12 @@ if __name__ == '__main__':
         sys.exit(1)
 
     ans = dict()
+    count = 0
 
     with open(sys.argv[2], 'r') as score_file:
         line = score_file.readline()
         while line:
+            count += 1
             l = line.split()
             ans[(l[0], l[1])] = float(l[2])
             line = score_file.readline()
@@ -27,6 +29,6 @@ if __name__ == '__main__':
             total += (ans[(l[0], l[1])] - float(l[2])) ** 2
             line = pred_file.readline()
 
-    print total ** 0.5
+    print (total ** 0.5) / count
 
 
