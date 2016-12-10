@@ -29,6 +29,6 @@ if __name__ == '__main__':
             total += (ans[(l[0], l[1])] - float(l[2])) ** 2
             line = pred_file.readline()
 
-    print (total ** 0.5) / count
+    print ((total / count) ** 0.5)
 
 
