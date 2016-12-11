@@ -1,0 +1,12 @@
+
+# climate (temperature & precipitation)
+http://databank.worldbank.org/data/download/catalog/cckp_historical_data_0.xls
+
+# Language similarity
+http://www.cepii.fr/DATA_DOWNLOAD/language/ling_web.dta
+
+# Distance between countries
+http://www.cepii.fr/distance/dist_cepii.zip
+
+# Religion
+http://data.un.org/Data.aspx?d=POP&f=tableCode%3A28
