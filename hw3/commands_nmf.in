@@ -1,0 +1,10 @@
+test1src/train.sh /mnt/disks/ssd/test1_new 30 150 0.5 nmf
+test1src/train.sh /mnt/disks/ssd/test1_new 30 200 0.5 nmf
+test1src/train.sh /mnt/disks/ssd/test1_new 30 300 0.5 nmf
+test1src/train.sh /mnt/disks/ssd/test1_new 30 400 0.5 nmf
+test1src/train.sh /mnt/disks/ssd/test1_new 30 200 0.5 lfnmf
+test1src/train.sh /mnt/disks/ssd/test1_new 30 200 0.5 nsnmf
+test1src/train.sh /mnt/disks/ssd/test1_new 30 200 0.5 pmf
+test1src/train.sh /mnt/disks/ssd/test1_new 30 200 0.5 psmf
+test1src/train.sh /mnt/disks/ssd/test1_new 30 200 0.5 snmf
+test1src/train.sh /mnt/disks/ssd/test1_new 30 200 0.5 sepnmf
