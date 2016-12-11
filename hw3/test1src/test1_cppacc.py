@@ -27,6 +27,12 @@ class Model:
         self.iter = 100
         if len(sys.argv) > 3:
             self.iter = int(sys.argv[3])
+        self.alpha = 0
+        if len(sys.argv) > 4:
+            self.alpha = float(sys.argv[4])
+        self.method = 'nmf'
+        if len(sys.argv) > 5:
+            self.method = sys.argv[5]
         
         self.r1 = [[0 for i in range(N_USER)] for j in range(N_ITEM)]
         self.r2 = [[0 for i in range(N_USER)] for j in range(N_ITEM)]
@@ -36,18 +42,30 @@ class Model:
         # Run MF
         print "Running non-negative MF....", strftime(
             "%Y-%m-%d %H:%M:%S", gmtime())
-        modelnmf = nimfa.Nmf(self.r1, rank=self.rank, max_iter=self.iter)
+        source_result = None
+        if self.method == "nmf":
+            modelnmf = nimfa.Nmf(self.r1, rank=self.rank, max_iter=self.iter)
+        elif self.method == "lfnmf":
+            modelnmf = nimfa.Lfnmf(self.r1, rank=self.rank, max_iter=self.iter)
+        elif self.method == "nsnmf":
+            modelnmf = nimfa.Nsnmf(self.r1, rank=self.rank, max_iter=self.iter)
+        elif self.method == "pmf":
+            modelnmf = nimfa.Pmf(self.r1, rank=self.rank, max_iter=self.iter)
+        elif self.method == "psmf":
+            modelnmf = nimfa.Psmf(self.r1, rank=self.rank, max_iter=self.iter)
+        elif self.method == "snmf":
+            modelnmf = nimfa.Snmf(self.r1, rank=self.rank, max_iter=self.iter)
+        elif self.method == "sepnmf":
+            modelnmf = nimfa.Sepnmf(self.r1, rank=self.rank, max_iter=self.iter)
+        else:
+            print "No model is being recognized, stopped."
+            sys.exit(1)
+
         model = modelnmf()
+        source_result = np.array(model.fitted())
+
         print "Done MF!", strftime("%Y-%m-%d %H:%M:%S", gmtime())
 
-        # sm = model.summary()
-        # print('Sparseness Basis: %5.3f  Mixture: %5.3f' % (
-            # sm['sparseness'][0], sm['sparseness'][1]))
-        # print('Iterations: %d' % sm['n_iter'])
-        # print('Target estimate:\n%s' % np.dot(
-            # model.basis().todense(), model.coef().todense()))
-
-        source_result = np.array(model.fitted())
 
         # Turn vector of per user into distribution
         # And calculate the dot similarity

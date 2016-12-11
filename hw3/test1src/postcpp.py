@@ -23,6 +23,12 @@ class Postcpp:
         self.iter = 100
         if len(sys.argv) > 4:
             self.iter = int(sys.argv[4])
+        self.alpha = 0
+        if len(sys.argv) > 5:
+            self.alpha = float(sys.argv[5])
+        self.method = 'nimfa'
+        if len(sys.argv) > 6:
+            self.method = sys.argv[6]
 
         self.mat = np.array(self.mat)
         print "Done. Now enter last step -- MF", strftime(
@@ -31,18 +37,27 @@ class Postcpp:
     def run(self, output_file):
         print "Running non-negative MF....", strftime(
             "%Y-%m-%d %H:%M:%S", gmtime())
-        modelnmf = nimfa.Nmf(self.mat, rank=self.rank, max_iter=self.iter)
+        if self.method == 'nmf':
+            modelnmf = nimfa.Nmf(self.mat, rank=self.rank, max_iter=self.iter)
+        elif self.method == "lfnmf":
+            modelnmf = nimfa.Lfnmf(self.mat, rank=self.rank, max_iter=self.iter)
+        elif self.method == "nsnmf":
+            modelnmf = nimfa.Nsnmf(self.mat, rank=self.rank, max_iter=self.iter)
+        elif self.method == "pmf":
+            modelnmf = nimfa.Pmf(self.mat, rank=self.rank, max_iter=self.iter)
+        elif self.method == "psmf":
+            modelnmf = nimfa.Psmf(self.mat, rank=self.rank, max_iter=self.iter)
+        elif self.method == "snmf":
+            modelnmf = nimfa.Snmf(self.mat, rank=self.rank, max_iter=self.iter)
+        elif self.method == "sepnmf":
+            modelnmf = nimfa.Sepnmf(self.mat, rank=self.rank, max_iter=self.iter)
+        else:
+            print "No model is being recognized, stopped."
+            sys.exit(1)
+
         model = modelnmf()
-        print "Done MF!", strftime("%Y-%m-%d %H:%M:%S", gmtime())
-
-        # sm = model.summary()
-        # print('Sparseness Basis: %5.3f  Mixture: %5.3f' % (
-            # sm['sparseness'][0], sm['sparseness'][1]))
-        # print('Iterations: %d' % sm['n_iter'])
-        # print('Target estimate:\n%s' % np.dot(
-            # model.basis().todense(), model.coef().todense()))
-
         self.result = np.array(model.fitted())
+        print "Done MF!", strftime("%Y-%m-%d %H:%M:%S", gmtime())
 
 
         print "Write results to file.", strftime("%Y-%m-%d %H:%M:%S", gmtime())
