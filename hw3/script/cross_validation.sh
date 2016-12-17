@@ -59,7 +59,7 @@ do
     fi
 
     CURRES=$(python $SCRIPT/scoring.py $2/test.txt $2/cross.txt)
-    echo [Round $c] ${commands[c]} :: $CURRES
+    echo [Round $i:$c] ${commands[c]} :: $CURRES
 
     RES=$RES" $CURRES"
   done
