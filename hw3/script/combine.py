@@ -10,7 +10,8 @@ if __name__ == '__main__':
 
     for line in allvalue:
         key = key_file.readline()
-        value_file.write("%s %s" % (key[:-1], line))
+        l = key.split()
+        value_file.write("%s %s %s" % (l[0], l[1], line))
 
     key_file.close()
     value_file.close()

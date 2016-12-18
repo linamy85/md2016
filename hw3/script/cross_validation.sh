@@ -29,7 +29,7 @@ do
 
   # read line and write to $NEW_DIR/test.txt & cross.txt
   if [ "$3" == "5fold" ]; then
-    python $SCRIPT/generate_fold.py $1 $2 $(wc $1/train.txt) $i
+    python $SCRIPT/generate_fold.py $1 $2 $i $(wc $1/train.txt)
   else
     python $SCRIPT/generate_valid.py $1 $2
   fi
@@ -59,7 +59,7 @@ do
     fi
 
     CURRES=$(python $SCRIPT/scoring.py $2/test.txt $2/cross.txt)
-    echo [Round $c] ${commands[c]} :: $CURRES
+    echo [Round $i:$c] ${commands[c]} :: $CURRES
 
     RES=$RES" $CURRES"
   done

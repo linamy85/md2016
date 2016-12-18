@@ -1,6 +1,6 @@
 #!/bin/bash
 
-MATRIX_DIR=$HOME/steady
+MATRIX_DIR=/tmp3/b03902055
 SRC_DIR=$HOME/md2016/hw3/test1src
 LIBNMF=$HOME/version_1.02
 LIBFM=$HOME/libfm-1.42.src
@@ -110,12 +110,9 @@ echo "LibFM done job."
 echo "--------------------- Step 2 & 3 [$(date)] ------------------------"
 
 # Compiles object file in current directory.
-g++ -Wall -c -O3 -std=c++11 $SRC_DIR/bipartite-mincost.cpp
-g++ -Wall -c -O3 -std=c++11 -pthread $SRC_DIR/step23.cpp
+g++ -Wall -O3 -std=c++11 -pthread $SRC_DIR/step23_kl.cpp -o step23_kl
 
-g++ -Wall -pthread step23.o -o step23
-
-./step23 $MATRIX_DIR/source.matrix.1 $1/source.txt \
+./step23_kl $MATRIX_DIR/source.matrix.1 $1/source.txt \
   $MATRIX_DIR/train.matrix.$session $1/train.txt $MATRIX_DIR/mytrain.libfm.$session
 
 rm step23 step23.o bipartite-mincost.o 

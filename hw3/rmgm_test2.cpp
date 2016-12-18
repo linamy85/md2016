@@ -475,13 +475,15 @@ int main(int argc, char const *argv[])
 			fprintf(stderr, "%lf%% done.\n", double(count) / lines * 100);
 		}	
 	}
-  fclose(fp);
-	fclose(fp2);
-  fp = myopen(dir_path, "test.txt", "w");
-  fp2 = myopen(dir_path, "pred.txt", "r");
-  while(fgets(line, 128, fp2)!=NULL)
-    fputs(line, fp);
+
   fclose(fp);
   fclose(fp2);
+  fp = myopen(dir_path, "test.txt", "w");
+  fp2 = myopen(dir_path, "pred.txt", "r");
+  while(fgets(line, 128, fp2) != NULL)
+    fputs(line, fp)
+  fclose(fp);
+  fclose(fp2);
+
 	return 0;
 }

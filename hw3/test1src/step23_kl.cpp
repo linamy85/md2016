@@ -18,7 +18,8 @@
 #define USER_N (50000)
 #define ITEM_N (5000)
 #define N_THREAD (20)
-#define DIST (20)
+#define DIST (5)
+#define INF (1e6)
 
 using namespace std;
 
@@ -89,23 +90,27 @@ void FindItemMatching(vector<int> &Rmate) {
         ++ t;
       }
     }
-    // CDF.
-    double src_accu = 0.0, tar_accu = 0.0;
     for (int i = 0; i <= DIST; ++i) {
-      src_accu += src_dist[item][i];
-      src_dist[item][i] = src_accu / s;
-      tar_accu += tar_dist[item][i];
-      tar_dist[item][i] = tar_accu / t;
+      src_dist[item][i] /= s;
+      tar_dist[item][i] /= t;
     }
   }
 
   cerr << "Going to transfer to weight matrix." << endl;
   // Transfer to weight matrix.
   MATRIX weight(ITEM_N, vector<double>(ITEM_N, 0.0));
+  double val;
   for (int src = 0; src < ITEM_N; ++src) {
     for (int tar = 0; tar < ITEM_N; ++tar) {
       for (int i = 0; i <= DIST; ++i) {
-        weight[src][tar] += abs(src_dist[src][i] - tar_dist[tar][i]);
+        // KL divergence.
+        val = src_dist[src][i] * log(src_dist[src][i] / tar_dist[tar][i]);
+        if (std::isnan(val))
+          val = src_dist[src][i] * -INF;
+        if (std::isinf(val))
+          val = src_dist[src][i] * INF;
+        else
+          weight[src][tar] += val;
       }
       //weight[src][tar] = (-1) * sqrt(total / (DIST + 1));
       //weight[src][tar] = sqrt(total / (DIST + 1));

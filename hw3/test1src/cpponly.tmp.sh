@@ -1,6 +1,6 @@
 #!/bin/bash
 
-MATRIX_DIR=$HOME/steady
+MATRIX_DIR=/tmp3/b03902055
 SRC_DIR=$HOME/md2016/hw3/test1src
 LIBNMF=$HOME/version_1.02
 LIBFM=$HOME/libfm-1.42.src
