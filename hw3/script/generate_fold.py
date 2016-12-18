@@ -1,8 +1,11 @@
 import sys
+import os
 
 if __name__ == '__main__':
-    n_line = int(sys.argv[3])
-    index = int(sys.argv[4])  # 1-based
+    n_line = int(sys.argv[4])
+    index = int(sys.argv[3])  # 1-based
+
+    print ("HHHHHHHHHHHHHHHH index %d line %d" % (index, n_line))
 
     original_file_name = os.path.join(sys.argv[1], "train.txt")
     original = open(original_file_name, 'r')
@@ -17,8 +20,10 @@ if __name__ == '__main__':
     new_pred = open(new_pred_file, 'w')
 
     count = 0
-    low = (index - 1) * count // 5
-    high = index * count // 5
+    low = (index - 1) * n_line // 5
+    high = index * n_line // 5
+
+    print("Fold %d : line %d to %d" % (index, low, high-1))
 
     line = original.readline()
     while line:
@@ -29,6 +34,7 @@ if __name__ == '__main__':
         else:
             new_train.write(line)
 
+        count += 1
         line = original.readline()
 
     original.close()
