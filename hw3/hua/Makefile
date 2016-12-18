@@ -1,14 +1,9 @@
 .PHONY: all clean
 
-DIR=cv
-FOLD_T=5
-RM_T=1
-TARGET=cv
+all: cross cross2
 
-all: clean $(TARGET) 
+cross:
+	../script/cv_forTest3.sh test3 cv 2 run
 
-cv:
-	../md2016/hw3/script/cross_validation.sh test3 $(DIR) $(RM_T) run
-
-clean:
-	rm -rf cv
+cross2:
+	../script/cv_forTest3.sh test3 cv2 3 run2
