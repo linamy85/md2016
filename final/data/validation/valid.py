@@ -85,6 +85,3 @@ if __name__ == '__main__':
                 print "(%s => %s) @ year 2015 has existed." % (
                     origin[idx], countries[country])
                 print e
-
-        if country == 'WORLD':
-            break
