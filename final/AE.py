@@ -21,7 +21,7 @@ def decoder(weights, biases, x):
 	return layer
 
 # HIDDEN_N
-def dim_reduce (data, batch_size, HIDDEN_N, training_epochs=20, learning_rate=0.01):
+def dim_reduce (data, HIDDEN_N, batch_size=256, training_epochs=20, learning_rate=0.01):
 
 	DATA_N = data.shape[0]
 
