@@ -1,6 +1,20 @@
 import pymysql
 import sklearn
 
+"""
+Example usage:
+    
+from Feature import Feature
+f = Feature()
+
+X, Y = f.getYearFeatures(2015)
+
+###      Meaning of X and Y     ###
+# for i in len(world's country pairs):
+#   X[i] = features of the pair
+#   Y[i] = immegrants from pair_x to pair_y
+"""
+
 
 class Feature:
     def __init__(self, country_threshold=1000):
