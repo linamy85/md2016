@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import pymysql
 import sklearn
 
@@ -23,19 +25,19 @@ class Feature:
 
         countries = self.getColumnCount('country', ['node', 'hua'])
         countries = { 
-            k: v for k, v in countries.iteritems() if v > country_threshold
+            k: v for k, v in countries.items() if v > country_threshold
         }
-        print "Found", len(countries), "country."
-        print countries.items()[:5]
+        print ("Found", len(countries), "country.")
+        print (list(countries.items())[:5])
 
         self.country_index = self.toIndex(countries)
-        print "Done indexing all countries"
+        print ("Done indexing all countries")
 
         self.node_index = self.toIndex(self.getColumnCount('tag', ['node', 'hua']))
         self.link_index = self.toIndex(self.getColumnCount('tag', ['link']))
 
-        print "Found", len(self.node_index), "nodes: ", self.node_index.items()[0]
-        print "Found", len(self.link_index), "links: ", self.link_index.items()[0]
+        print ("Found", len(self.node_index), "nodes: ", list(self.node_index.items())[0])
+        print ("Found", len(self.link_index), "links: ", list(self.link_index.items())[0])
 
 
     # Country (source, target) pair to feature
@@ -44,16 +46,16 @@ class Feature:
         validation = self.getValidation(year)
         node_avg = self.getFeatureAvg(year, self.node_index, ['node', 'hua'])
         link_avg = self.getFeatureAvg(year, self.link_index, ['link'])
-        print "Get node & link features average done."
-        print node_avg[:5]
+        print ("Get node & link features average done.")
+        print (node_avg[:5])
 
         # Gets all features for countries in given year
         allnodes = dict()
         for country, idx in self.country_index.items():
             allnodes[country] = self.getNodeFeature(country, year, node_avg)
-            print country, "feature done."
+            print (country, "feature done.")
         
-        print "Dictioned countries features."
+        print ("Dictioned countries features.")
         
         X = []
         Y = []
@@ -67,7 +69,7 @@ class Feature:
                             src, tar, tar_features[tar], allnodes, link_avg)
                     )
                     Y.append(validation[(src, tar)])
-            print "source #", idx_src, src, "done." 
+            print ("source #", idx_src, src, "done.")
 
         return X, Y
 
@@ -132,10 +134,9 @@ class Feature:
         for table in tables:
             sql = "SELECT tag, AVG(CAST(value AS DECIMAL(16,6))) FROM %s "\
                   "WHERE year = 0 OR year = %d GROUP BY tag;" % (table, year)
-            print sql
             self.cursor.execute(sql)
             all = self.cursor.fetchall()
-            print all[:5]
+            print ("Average in table", table, ":", all[:5])
             for tag, avg in all:
                 if tag in feature_index:
                     ans[ feature_index[tag] ] = float(avg)
@@ -146,7 +147,7 @@ class Feature:
     def toIndex(self, countdict):
         index = 0
         ans = dict()
-        for key in countdict.iterkeys():
+        for key in countdict.keys():
             ans[key] = index
             index += 1
         return ans
@@ -170,8 +171,5 @@ class Feature:
         ans += link_f
         
         return ans
-
-
-
 
 
