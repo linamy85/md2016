@@ -49,7 +49,7 @@ if __name__ == '__main__':
         print ("Dimension reduction done with PCA")
     else:
         train_X_reduce, ae_w, ae_b = AE.dim_reduce(np.array(train_X), DIM, BATCH, 50, 0.01)
-        test_X_reduce = pca.forward2hidden(np.array(test_X), ae_w, ae_b, DIM)
+        test_X_reduce = AE.forward2hidden(np.array(test_X), ae_w, ae_b, DIM)
         print ("Dimension reduction done with AE")
 
     clf = svm.SVR(verbose=True)
