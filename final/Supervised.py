@@ -21,7 +21,7 @@ BATCH = 128
 def evaluate(ans, res):
     total = 0.0
     for i in range(len(ans)):
-        total += math.abs(ans[i] - res[i])
+        total += math.fabs(ans[i] - res[i])
     return total
 
 if __name__ == '__main__':
