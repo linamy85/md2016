@@ -42,11 +42,15 @@ class Feature:
     def getYearFeatures(self, year):
         # Gets all validation data.
         validation = self.getValidation(year)
+        node_avg = self.getFeatureAvg(year, self.node_index, ['node', 'hua'])
+        link_avg = self.getFeatureAvg(year, self.link_index, ['link'])
+        print "Get node & link features average done."
+        print node_avg[:5]
 
         # Gets all features for countries in given year
         allnodes = dict()
         for country, idx in self.country_index.items():
-            allnodes[country] = self.getNodeFeature(country, year)
+            allnodes[country] = self.getNodeFeature(country, year, node_avg)
             print country, "feature done."
         
         print "Dictioned countries features."
@@ -59,7 +63,8 @@ class Feature:
             for tar, idx_tar in self.country_index.items():
                 if (src, tar) in validation:
                     X.append(
-                        self.indexPairFeature(src, tar, tar_features[tar], allnodes)
+                        self.indexPairFeature(
+                            src, tar, tar_features[tar], allnodes, link_avg)
                     )
                     Y.append(validation[(src, tar)])
             print "source #", idx_src, src, "done." 
@@ -79,8 +84,8 @@ class Feature:
 
 
     # Retrieves features of given country, which is indexed.
-    def getNodeFeature(self, country, year):
-        ans = [0 for i in range(len(self.node_index))]
+    def getNodeFeature(self, country, year, node_avg):
+        ans = node_avg[:]
         
         for table in ['node', 'hua']:
             sql = "SELECT value, tag FROM %s "\
@@ -105,6 +110,10 @@ class Feature:
 
         return ans
 
+    #####################################
+    #           Basic methods           #
+    #####################################
+
     # name      :: column name
     # tables    :: list of targets table
     def getColumnCount(self, name, tables):
@@ -115,6 +124,21 @@ class Feature:
             for key, c in self.cursor.fetchall():
                 ans.setdefault(key, 0)
                 ans[key] += c
+        return ans
+
+    def getFeatureAvg(self, year, feature_index, tables):
+        ans = [0 for i in range(len(feature_index))]
+
+        for table in tables:
+            sql = "SELECT tag, AVG(CAST(value AS DECIMAL(16,6))) FROM %s "\
+                  "WHERE year = 0 OR year = %d GROUP BY tag;" % (table, year)
+            print sql
+            self.cursor.execute(sql)
+            all = self.cursor.fetchall()
+            print all[:5]
+            for tag, avg in all:
+                if tag in feature_index:
+                    ans[ feature_index[tag] ] = float(avg)
         return ans
 
 
@@ -129,7 +153,7 @@ class Feature:
 
 
     # Indexes all features of given pair (src, tar).
-    def indexPairFeature(self, src, tar, srctarfs, allnodes):
+    def indexPairFeature(self, src, tar, srctarfs, allnodes, link_avg):
         # part 1: source country
         # part 2: target country
         # part 3: pair relationship
@@ -138,7 +162,7 @@ class Feature:
         ans += allnodes[src]
         ans += allnodes[tar]
         
-        link_f = [0 for x in range(len(self.link_index))]
+        link_f = link_avg[:]
         
         for val, tag in srctarfs:
             link_f[self.link_index[tag]] = float(val)
