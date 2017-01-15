@@ -17,24 +17,25 @@ X, Y = f.getYearFeatures(2015)
 #   Y[i] = immegrants from pair_x to pair_y
 """
 
+NODE_TABLE = ['node', 'hua']
+LINK_TABLE = ['link', 'trade']
 
 class Feature:
-    def __init__(self, country_threshold=1000):
+    def __init__(self, node_threshold=150, migration_threshold=40):
         self.db = pymysql.connect("localhost", "root", "fighting", "md")
         self.cursor = self.db.cursor()
-
-        countries = self.getColumnCount('country', ['node', 'hua'])
-        countries = { 
-            k: v for k, v in countries.items() if v > country_threshold
-        }
-        print ("Found", len(countries), "country.")
+        
+        # Randomly take 2015 for filtering.
+        countries = self.filterCountry(2010, node_threshold, migration_threshold)
+        print ("Found", len(countries), "/", 
+               self.getColumnNumber("country", NODE_TABLE), "country left.")
         print (list(countries.items())[:5])
 
         self.country_index = self.toIndex(countries)
         print ("Done indexing all countries")
 
-        self.node_index = self.toIndex(self.getColumnCount('tag', ['node', 'hua']))
-        self.link_index = self.toIndex(self.getColumnCount('tag', ['link']))
+        self.node_index = self.toIndex(self.getColumnCount('tag', NODE_TABLE))
+        self.link_index = self.toIndex(self.getColumnCount('tag', LINK_TABLE))
 
         print ("Found", len(self.node_index), "nodes: ", list(self.node_index.items())[0])
         print ("Found", len(self.link_index), "links: ", list(self.link_index.items())[0])
@@ -44,8 +45,8 @@ class Feature:
     def getYearFeatures(self, year):
         # Gets all validation data.
         validation = self.getValidation(year)
-        node_avg = self.getFeatureAvg(year, self.node_index, ['node', 'hua'])
-        link_avg = self.getFeatureAvg(year, self.link_index, ['link'])
+        node_avg = self.getFeatureAvg(year, self.node_index, NODE_TABLE)
+        link_avg = self.getFeatureAvg(year, self.link_index, LINK_TABLE)
         print ("Get node & link features average done.")
         print (node_avg[:5])
 
@@ -89,7 +90,7 @@ class Feature:
     def getNodeFeature(self, country, year, node_avg):
         ans = node_avg[:]
         
-        for table in ['node', 'hua']:
+        for table in NODE_TABLE:
             sql = "SELECT value, tag FROM %s "\
                   "WHERE country='%s' AND ( year=0 OR year=%d );"\
                     % (table, country, year)
@@ -103,12 +104,14 @@ class Feature:
     def getLinkSrcFeature(self, src, year):
         ans = dict([(c, []) for c in self.country_index.keys()])
 
-        sql = "SELECT country2, value, tag FROM link " \
-              "WHERE country1='%s' AND (year=0 OR year=%d);" % (src, year)
-        self.cursor.execute(sql)
-        for tar, val, tag in self.cursor.fetchall():
-            if tar in self.country_index:
-                ans[tar].append((val, tag))
+        for table in LINK_TABLE:
+            sql = "SELECT country2, value, tag FROM %s" \
+                  "WHERE country1='%s' AND (year=0 OR year=%d);" \
+                    % (table, src, year)
+            self.cursor.execute(sql)
+            for tar, val, tag in self.cursor.fetchall():
+                if tar in self.country_index:
+                    ans[tar].append((val, tag))
 
         return ans
 
@@ -152,6 +155,14 @@ class Feature:
             index += 1
         return ans
 
+    def getColumnNumber(self, name, tables):
+        ans = set()
+        subsql = ["SELECT %s from %s" % (name, table) for table in tables]
+        sql = "SELECT count(%s) from (%s) as a;" % (name, " union ".join(subsql))
+        print (sql)
+        self.cursor.execute(sql)
+        return self.cursor.fetchall()
+
 
     # Indexes all features of given pair (src, tar).
     def indexPairFeature(self, src, tar, srctarfs, allnodes, link_avg):
@@ -172,4 +183,39 @@ class Feature:
         
         return ans
 
+    # Filters country by immegrants/emigrant number.
+    def filterCountry(self, year, node_threshold, migration_threshold):
+        ans = {}
+        # Retrieves countries over node_threshold.
+        subsql = []
+        for table in NODE_TABLE:
+            subsql.append("(SELECT country, count(1) as num FROM %s "\
+                          "WHERE year = 0 OR year = %d GROUP BY country)"\
+                          % (table, year))
+        sql = "SELECT country FROM ( %s ) as a GROUP BY country "\
+                "having sum(num) > %d;" \
+                % (" union all ".join(subsql), node_threshold)
+        print (sql)
+        self.cursor.execute(sql)
+        for country in self.cursor.fetchall():
+            ans[country[0]] = 0
+        print (ans)
 
+        # Retrieves countries over migration number.
+        for dir in ['source', 'target']:
+            sql = "SELECT %s, count(*) as num from migration "\
+                  "WHERE value > 0 and year = %d GROUP BY %s;" \
+                  % (dir, year, dir)
+            print (sql)
+            self.cursor.execute(sql)
+            for country, count in self.cursor.fetchall():
+                if country in ans:
+                    ans[country] += count
+                # else:
+                    # print ("'%s' with lots migration but less node data!", country)
+
+        for country, count in list(ans.items()):
+            if count < migration_threshold:
+                print ("'%s' has bad migration: %d, kicked out!" % (country, count))
+                ans.pop(country, None)
+        return ans
