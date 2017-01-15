@@ -62,7 +62,9 @@ if __name__ == '__main__':
 
     error = evaluate(test_Y, test_Y_result)
     print ("L1 error for 2010:", error)
+    print ("Average error", error / len(train_Y))
     print ("Ans:", test_Y[:20])
     print ("SVM:", test_Y_result[:20])
+
 
 

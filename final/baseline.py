@@ -23,7 +23,7 @@ def baseline(feature, year):
     feature.cursor.execute(sql)
     for country, val in feature.cursor.fetchall():
         if country in feature.country_index:
-            print ("#", feature.country_index[country], country, val)
+            # print ("#", feature.country_index[country], country, val)
             source[feature.country_index[country]] = float(val)
 
     sql = "SELECT target, sum(value) FROM migration "\
@@ -31,7 +31,7 @@ def baseline(feature, year):
     feature.cursor.execute(sql)
     for country, val in feature.cursor.fetchall():
         if country in feature.country_index:
-            print ("#", feature.country_index[country], country, val)
+            # print ("#", feature.country_index[country], country, val)
             target[feature.country_index[country]] = float(val)
 
     ans = [0 for i in range(N_country * N_country)]
@@ -79,9 +79,11 @@ if __name__ == '__main__':
         for src, ix in feature.country_index.items():
             real_ans.append(real[(src, tar)])
 
+    N_country = len(feature.country_index)
 
     error = evaluate(real_ans, ans)
     print ("Baseline error:", error)
+    print ("Average error:", error / len(real_ans))
     print ("Ans: ", real_ans[:N_country])
     print ("Base:", ans[:N_country])
 
