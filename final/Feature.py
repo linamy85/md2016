@@ -7,7 +7,15 @@ import sklearn
 Example usage:
     
 from Feature import Feature
-f = Feature()
+
+###     Parameters to adjust    ###
+# node_threshold :: limit the lower bound of node features
+# migration_threshold :: limit the lower bound of number of migration(in+out),
+#       For each country, if migration to another country A > 0, then add 1.
+#       If migration from another country B > 0, then add 1 too.
+#       And the total count of a country should > migration_threshold.
+
+f = Feature(node_threshold=180, migration_threshold=50)
 
 X, Y = f.getYearFeatures(2015)
 
