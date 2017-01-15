@@ -169,7 +169,7 @@ class Feature:
         sql = "SELECT count(%s) from (%s) as a;" % (name, " union ".join(subsql))
         print (sql)
         self.cursor.execute(sql)
-        return self.cursor.fetchall()
+        return self.cursor.fetchall()[0][0]
 
 
     # Indexes all features of given pair (src, tar).
