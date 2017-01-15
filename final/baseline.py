@@ -12,23 +12,7 @@ def evaluate(ans, res):
         total += math.fabs(ans[i] - res[i])
     return total
 
-
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(
-        description='Baseline method for MD final project.'
-    )
-    parser.add_argument('--year', '-y', help='Year to test',
-                        dest='year', type=int, required=True)
-    parser.add_argument('--node-threshold', '-n', help='Node features # threshold',
-                        dest='node_threshold', type=int, default=150)
-    parser.add_argument('--migration-threshold', '-m',
-                        help='Migrants non-zero # threshold',
-                        dest='migrat_threshold', type=int, default=40)
-
-    args = parser.parse_args(sys.argv[1:])
-
-    feature = Feature(args.node_threshold, args.migrat_threshold)
-
+def baseline(feature, year):
     N_country = len(feature.country_index)
 
     source = [0 for i in range(N_country)] 
@@ -67,9 +51,26 @@ if __name__ == '__main__':
             ans[idx] = target[i] * (source[j] / SUM)
             idx += 1
 
-    if idx != (N_country * N_country):
-        print ("Something weird.....")
-        sys.exit(1)
+    return ans
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(
+        description='Baseline method for MD final project.'
+    )
+    parser.add_argument('--year', '-y', help='Year to test',
+                        dest='year', type=int, required=True)
+    parser.add_argument('--node-threshold', '-n', help='Node features # threshold',
+                        dest='node_threshold', type=int, default=150)
+    parser.add_argument('--migration-threshold', '-m',
+                        help='Migrants non-zero # threshold',
+                        dest='migrat_threshold', type=int, default=40)
+
+    args = parser.parse_args(sys.argv[1:])
+
+    feature = Feature(args.node_threshold, args.migrat_threshold)
+
+    ans = baseline(feature, args.year)
 
     # Getting real answer.
     real = feature.getValidation(args.year)
