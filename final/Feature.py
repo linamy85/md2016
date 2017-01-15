@@ -116,7 +116,6 @@ class Feature:
             sql = "SELECT country2, value, tag FROM %s " \
                   "WHERE country1='%s' AND (year=0 OR year=%d);" \
                     % (table, src, year)
-            print (sql)
             self.cursor.execute(sql)
             for tar, val, tag in self.cursor.fetchall():
                 if tar in self.country_index:
