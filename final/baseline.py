@@ -18,6 +18,8 @@ def baseline(feature, year):
     source = [0 for i in range(N_country)] 
     target = [0 for i in range(N_country)] 
 
+    total = 0
+
     sql = "SELECT source, sum(value) FROM migration "\
             "WHERE year = %d GROUP BY source;" % args.year
     feature.cursor.execute(sql)
@@ -25,6 +27,10 @@ def baseline(feature, year):
         if country in feature.country_index:
             # print ("#", feature.country_index[country], country, val)
             source[feature.country_index[country]] = float(val)
+            total += int(val)
+
+    print ("Total:", total)
+    print ("Average:", float(total) / (N_country * N_country))
 
     sql = "SELECT target, sum(value) FROM migration "\
             "WHERE year = %d GROUP BY target;" % args.year
