@@ -1,10 +1,10 @@
 from __future__ import print_function
 
 import pymysql
-import sklearn
+from sklearn import preprocessing
 
 """
-Example usage 1:
+Example usage:
     
 from Feature import Feature
 
@@ -17,7 +17,7 @@ from Feature import Feature
 
 f = Feature(node_threshold=180, migration_threshold=50)
 
-X, Y, _, __ = f.getYearFeatures(2015)  # The last two objects returned is useless.
+X, Y = f.getYearFeatures(2015)
 
 ###      Meaning of X and Y     ###
 # for i in len(world's country pairs):
@@ -26,33 +26,14 @@ X, Y, _, __ = f.getYearFeatures(2015)  # The last two objects returned is useles
 #   Y[i] = immegrants from pair_x to pair_y
 """
 
-"""
-Example usage 2:
-
-from Feature import Feature
-
-###     Parameters to adjust    ###
-# node_threshold, migration_threshold :: same as `Example usage 1`.
-# set_unknown :: split features array & values from original answer X & Y.
-
-f = Feature(node_threshold=180, migration_threshold=50, set_unknown='USA,POL')
-
-# X & UX has same format as `Example usage 1`, so do Y & UY.
-X, Y, UX, UY = f.getYearFeatures(2015)
-"""
-
 NODE_TABLE = ['node', 'hua']
 LINK_TABLE = ['link', 'trade']
 
 class Feature:
-    def __init__(self, node_threshold=150, migration_threshold=40,
-                 set_unknown=''):
+    def __init__(self, node_threshold=150, migration_threshold=40):
         self.db = pymysql.connect("localhost", "root", "fighting", "md")
         self.cursor = self.db.cursor()
         
-        # Sets unknown country list.
-        unknowns_list = set_unknown.split(',')
-
         # Randomly take 2015 for filtering.
         countries = self.filterCountry(2010, node_threshold, migration_threshold)
         print ("Found", len(countries), "/", 
@@ -62,15 +43,6 @@ class Feature:
         self.country_index = self.toIndex(countries)
         print ("Done indexing all countries")
 
-        self.unknowns = dict()
-        for country in unknowns_list:
-            if country in self.country_index:
-                self.unknowns[country] = self.country_index[country]
-            else:
-                print ("Didn't find country:", country, ", kick out of unknowns.")
-        
-        print ("Final unknowns:", self.unknowns)
-
         self.node_index = self.toIndex(self.getColumnCount('tag', NODE_TABLE))
         self.link_index = self.toIndex(self.getColumnCount('tag', LINK_TABLE))
 
@@ -79,7 +51,7 @@ class Feature:
 
 
     # Country (source, target) pair to feature
-    def getYearFeatures(self, year):
+    def getYearFeatures(self, year, standard=False):
         # Gets all validation data.
         validation = self.getValidation(year)
         node_avg = self.getFeatureAvg(year, self.node_index, NODE_TABLE)
@@ -91,14 +63,12 @@ class Feature:
         allnodes = dict()
         for country, idx in self.country_index.items():
             allnodes[country] = self.getNodeFeature(country, year, node_avg)
-            print ("#", idx, "-", country, ".", end="\t")
+            print ("#", idx, "-", country, "feature done.")
         
-        print ("\nDictioned countries features.")
+        print ("Dictioned countries features.")
         
         X = []
         Y = []
-        UX = []
-        UY = []
         for src, idx_src in self.country_index.items():
             tar_features = self.getLinkSrcFeature(src, year)
 
@@ -117,6 +87,17 @@ class Feature:
 
         return X, Y
 
+    def standardizeX(self, X):
+        if len(X[0]) != 3:
+            print ("Format error!")
+            return
+
+        for i in range(3):
+            l = [ x[i] for x in X ]
+            l = preprocessing.scale(l)
+            for k in range(len(X)):
+                X[k][i] = l[k]
+        print ("Standardize data done!")
 
     # Retrieves validation data
     def getValidation(self, year):
