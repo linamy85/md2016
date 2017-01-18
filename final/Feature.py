@@ -118,10 +118,10 @@ class Feature:
         N_country = len(self.country_index)
 
         targets = set()
-        for country, idx in self.unknowns:
+        for country, idx in self.unknowns.items():
             for i in range(N_country):
-                target.add(idx * N_country + i)
-                target.add(idx + i * N_country)
+                targets.add(idx * N_country + i)
+                targets.add(idx + i * N_country)
 
         # Copies target id to UX, UY.
         for i in targets:
