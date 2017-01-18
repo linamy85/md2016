@@ -34,14 +34,8 @@ if __name__ == '__main__':
 
     feature = Feature()
 
-    train_X, train_Y, _, __ = feature.getYearFeatures(2015)
-    if sys.argv[1] == 'ae':
-       feature.standardizeX(train_X) 
-
-    test_X, test_Y, _, __ = feature.getYearFeatures(2010)
-    if sys.argv[1] == 'ae':
-       feature.standardizeX(test_X) 
-
+    train_X, train_Y = feature.getYearFeatures(2015)
+    test_X, test_Y = feature.getYearFeatures(2010)
     print ("All data prepared.")
 
     train_X_reduce = None

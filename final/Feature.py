@@ -1,7 +1,7 @@
 from __future__ import print_function
 
 import pymysql
-from sklearn import preprocessing
+import sklearn
 
 """
 Example usage 1:
@@ -79,7 +79,7 @@ class Feature:
 
 
     # Country (source, target) pair to feature
-    def getYearFeatures(self, year, standard=False):
+    def getYearFeatures(self, year):
         # Gets all validation data.
         validation = self.getValidation(year)
         node_avg = self.getFeatureAvg(year, self.node_index, NODE_TABLE)
@@ -115,37 +115,8 @@ class Feature:
         if standard:
             self.standardizeX(X)
 
-        N_country = len(self.country_index)
+        return X, Y
 
-        targets = set()
-        for country, idx in self.unknowns.items():
-            for i in range(N_country):
-                targets.add(idx * N_country + i)
-                targets.add(idx + i * N_country)
-
-        # Copies target id to UX, UY.
-        for i in targets:
-            UX.append(X[i])
-            UY.append(Y[i])
-
-        # Deletes target id from X, Y.
-        for i in sorted(targets, reverse=True):  # Decrease
-            del X[i]
-            del Y[i]
-
-        return X, Y, UX, UY
-
-    def standardizeX(self, X):
-        if len(X[0]) != 3:
-            print ("Format error!")
-            return
-
-        for i in range(3):
-            l = [ x[i] for x in X ]
-            l = preprocessing.scale(l)
-            for k in range(len(X)):
-                X[k][i] = l[k]
-        print ("Standardize data done!")
 
     # Retrieves validation data
     def getValidation(self, year):
