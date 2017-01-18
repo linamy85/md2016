@@ -53,6 +53,8 @@ if __name__ == '__main__':
         ), axis=1)
         print ("Dimension reduction done with PCA")
     else:
+        feature.standardizeX(train_X)
+        feature.standardizeX(test_X)
         train_X_reduce, ae_w, ae_b = AE.dim_reduce(
             np.array([ x[0]+x[1] for x in train_X ]), DIM, BATCH, 50, 0.01
         )

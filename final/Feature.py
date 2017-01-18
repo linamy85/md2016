@@ -24,6 +24,9 @@ X, Y = f.getYearFeatures(2015)
 #   # let index i ==> (x -> y)
 #   X[i] = [[features(x)], [features(y)], [features(x->y)]]
 #   Y[i] = immegrants from pair_x to pair_y
+
+f.standardizeX(X)  # Call me if you're using Autoencoder.
+
 """
 
 NODE_TABLE = ['node', 'hua']
@@ -63,9 +66,9 @@ class Feature:
         allnodes = dict()
         for country, idx in self.country_index.items():
             allnodes[country] = self.getNodeFeature(country, year, node_avg)
-            print ("#", idx, "-", country, "feature done.")
+            print ("#", idx, "-", country, end='\t')
         
-        print ("Dictioned countries features.")
+        print ("\nDictioned countries features.")
         
         X = []
         Y = []
