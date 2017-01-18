@@ -21,7 +21,8 @@ X, Y = f.getYearFeatures(2015)
 
 ###      Meaning of X and Y     ###
 # for i in len(world's country pairs):
-#   X[i] = features of the pair
+#   # let index i ==> (x -> y)
+#   X[i] = [[features(x)], [features(y)], [features(x->y)]]
 #   Y[i] = immegrants from pair_x to pair_y
 """
 
@@ -62,7 +63,7 @@ class Feature:
         allnodes = dict()
         for country, idx in self.country_index.items():
             allnodes[country] = self.getNodeFeature(country, year, node_avg)
-            print (country, "feature done.")
+            print ("#", idx, "-", country, "feature done.")
         
         print ("Dictioned countries features.")
         
@@ -78,7 +79,8 @@ class Feature:
                             src, tar, tar_features[tar], allnodes, link_avg)
                     )
                     Y.append(validation[(src, tar)])
-            print ("source #", idx_src, src, "done.")
+            # print ("source #", idx_src, src, "done.")
+        print ("All pairs indexing done.")
 
         return X, Y
 
@@ -179,15 +181,15 @@ class Feature:
         # part 3: pair relationship
         ans = []
         
-        ans += allnodes[src]
-        ans += allnodes[tar]
+        ans.append(allnodes[src])
+        ans.append(allnodes[tar])
         
         link_f = link_avg[:]
         
         for val, tag in srctarfs:
             link_f[self.link_index[tag]] = float(val)
         
-        ans += link_f
+        ans.append(link_f)
         
         return ans
 

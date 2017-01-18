@@ -35,21 +35,42 @@ if __name__ == '__main__':
     feature = Feature()
 
     train_X, train_Y = feature.getYearFeatures(2015)
-
+    for x in train_X:
+        if len(x) != 3:
+            print (x, "not 3!!")
     test_X, test_Y = feature.getYearFeatures(2010)
+    for x in test_X:
+        if len(x) != 3:
+            print (x, "not 3!!")
     print ("All data prepared.")
 
     train_X_reduce = None
     test_X_reduce = None
     if sys.argv[1] == 'pca':
         pca = PCA(n_components = DIM)
-        train_X_reduce = pca.fit_transform(np.array(train_X))
+        train_X_reduce = np.concatenate((
+            pca.fit_transform(np.array([ x[0]+x[1] for x in train_X ])),
+            np.array([ x[2] for x in train_X ])
+        ), axis=1)
         # Applies same model on test data.
-        test_X_reduce = pca.transform(np.array(test_X))
+        test_X_reduce = np.concatenate((
+            pca.transform(np.array([ x[0]+x[1] for x in test_X ])),
+            np.array([ x[2] for x in test_X ])
+        ), axis=1)
         print ("Dimension reduction done with PCA")
     else:
-        train_X_reduce, ae_w, ae_b = AE.dim_reduce(np.array(train_X), DIM, BATCH, 50, 0.01)
-        test_X_reduce = AE.forward2hidden(np.array(test_X), ae_w, ae_b, DIM)
+        train_X_reduce, ae_w, ae_b = AE.dim_reduce(
+            np.array([ x[0]+x[1] for x in train_X ]), DIM, BATCH, 50, 0.01
+        )
+        train_X_reduce = np.concatenate((
+            train_X_reduce, np.array([ x[2] for x in train_X ])
+        ), axis=1)
+        # Applies same model on test data
+        test_X_reduce = np.concatenate((
+            AE.forward2hidden(
+                np.array([ x[0]+x[1] for x in test_X ]), ae_w, ae_b, DIM
+            ), np.array([ x[2] for x in test_X ])
+        ), axis=1)
         print ("Dimension reduction done with AE")
 
     clf = svm.SVR(verbose=True)
