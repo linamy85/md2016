@@ -1,7 +1,7 @@
 from __future__ import print_function
 
 import pymysql
-import sklearn
+from sklearn import preprocessing
 
 """
 Example usage:
@@ -51,7 +51,7 @@ class Feature:
 
 
     # Country (source, target) pair to feature
-    def getYearFeatures(self, year):
+    def getYearFeatures(self, year, standard=False):
         # Gets all validation data.
         validation = self.getValidation(year)
         node_avg = self.getFeatureAvg(year, self.node_index, NODE_TABLE)
@@ -82,8 +82,22 @@ class Feature:
             # print ("source #", idx_src, src, "done.")
         print ("All pairs indexing done.")
 
+        if standard:
+            self.standardizeX(X)
+
         return X, Y
 
+    def standardizeX(self, X):
+        if len(X[0]) != 3:
+            print ("Format error!")
+            return
+
+        for i in range(3):
+            l = [ x[i] for x in X ]
+            l = preprocessing.scale(l)
+            for k in range(len(X)):
+                X[k][i] = l[k]
+        print ("Standardize data done!")
 
     # Retrieves validation data
     def getValidation(self, year):

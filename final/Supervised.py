@@ -35,13 +35,13 @@ if __name__ == '__main__':
     feature = Feature()
 
     train_X, train_Y = feature.getYearFeatures(2015)
-    for x in train_X:
-        if len(x) != 3:
-            print (x, "not 3!!")
+    if sys.argv[1] == 'ae':
+       feature.standardizeX(train_X) 
+
     test_X, test_Y = feature.getYearFeatures(2010)
-    for x in test_X:
-        if len(x) != 3:
-            print (x, "not 3!!")
+    if sys.argv[1] == 'ae':
+       feature.standardizeX(test_X) 
+
     print ("All data prepared.")
 
     train_X_reduce = None
