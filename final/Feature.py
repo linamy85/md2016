@@ -14,6 +14,8 @@ from Feature import Feature
 #       For each country, if migration to another country A > 0, then add 1.
 #       If migration from another country B > 0, then add 1 too.
 #       And the total count of a country should > migration_threshold.
+# categories :: Category list to fetch from `NODE_TABLE`
+#       example: Feature(categories=['culture', 'climate'])
 
 f = Feature(node_threshold=180, migration_threshold=50)
 
@@ -33,7 +35,7 @@ NODE_TABLE = ['node', 'hua']
 LINK_TABLE = ['link', 'trade']
 
 class Feature:
-    def __init__(self, node_threshold=150, migration_threshold=40):
+    def __init__(self, node_threshold=150, migration_threshold=40, categories=None):
         self.db = pymysql.connect("localhost", "root", "fighting", "md")
         self.cursor = self.db.cursor()
         
@@ -46,7 +48,13 @@ class Feature:
         self.country_index = self.toIndex(countries)
         print ("Done indexing all countries")
 
-        self.node_index = self.toIndex(self.getColumnCount('tag', NODE_TABLE))
+        self.node_index = None
+        if categories:
+            self.node_index = self.toIndex(
+                self.getCountByCategory(NODE_TABLE, categories))
+        else:
+            self.node_index = self.toIndex(self.getColumnCount('tag', NODE_TABLE))
+
         self.link_index = self.toIndex(self.getColumnCount('tag', LINK_TABLE))
 
         print ("Found", len(self.node_index), "nodes: ", list(self.node_index.items())[0])
@@ -66,7 +74,7 @@ class Feature:
         allnodes = dict()
         for country, idx in self.country_index.items():
             allnodes[country] = self.getNodeFeature(country, year, node_avg)
-            print ("#", idx, "-", country, end='\t')
+            print ("#", idx, "-", country, end='\t', flush=True)
         
         print ("\nDictioned countries features.")
         
@@ -123,7 +131,8 @@ class Feature:
                     % (table, country, year)
             self.cursor.execute(sql)
             for val, tag in self.cursor.fetchall():
-                ans[self.node_index[tag]] = float(val)
+                if tag in self.node_index:
+                    ans[self.node_index[tag]] = float(val)
         return ans
 
 
@@ -158,6 +167,18 @@ class Feature:
                 ans[key] += c
         return ans
 
+    def getCountByCategory(self, tables, categories):
+        ans = dict()
+        where = "' ) OR ( category='".join(categories)
+        for table in tables:
+            sql = "SELECT tag, COUNT(1) from %s "\
+                    "WHERE ( category='%s' ) GROUP BY tag;" % (table, where)
+            self.cursor.execute(sql)
+            for key, c in self.cursor.fetchall():
+                ans.setdefault(key, 0)
+                ans[key] += c
+        return ans
+
     def getFeatureAvg(self, year, feature_index, tables):
         ans = [0 for i in range(len(feature_index))]
 
@@ -183,13 +204,11 @@ class Feature:
         return ans
 
     def getColumnNumber(self, name, tables):
-        ans = set()
         subsql = ["SELECT %s from %s" % (name, table) for table in tables]
         sql = "SELECT count(%s) from (%s) as a;" % (name, " union ".join(subsql))
         print (sql)
         self.cursor.execute(sql)
         return self.cursor.fetchall()[0][0]
-
 
     # Indexes all features of given pair (src, tar).
     def indexPairFeature(self, src, tar, srctarfs, allnodes, link_avg):
