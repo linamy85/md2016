@@ -20,9 +20,15 @@ print('==============================')
 
 ################### output ############################
 # data after dim_reduce: (vectorN, HIDDEN_N)
+# w
+# b
 
-X = AE.dim_reduce(data, 3, 2, 20, 0.01)
+X, w, b = AE.dim_reduce(data, 3, 2, 20, 0.01)
 
 print('==============================')
 print('answer:', X.shape[0], ',', X.shape[1])
 print(X)
+
+#forward2hidden(data, w, b, batch_size):
+XX = AE.forward2hidden(data, w, b, 2)
+print(XX)

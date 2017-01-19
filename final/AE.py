@@ -98,5 +98,18 @@ def dim_reduce (data, HIDDEN_N, batch_size=256, training_epochs=20, learning_rat
                 X_FE.append(sigmoid(np.add(np.dot(np.transpose(w), data[i]), b)))
         X_FE = np.asarray(X_FE)
 
-        return X_FE
+        return X_FE, w, b
+    
+def forward2hidden(data, w, b, batch_size):
+
+    DATA_N = data.shape[0]
+    total_batch = int(DATA_N/batch_size)
+    X_FE = []
+    for i in range(DATA_N):
+        X_FE.append(sigmoid(np.add(np.dot(np.transpose(w), data[i]), b)))
+    X_FE = np.asarray(X_FE)
+    return X_FE
+
+
+
 

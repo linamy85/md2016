@@ -1,9 +1,11 @@
 import pandas as pd
-import connect
 
 import wbdata
 import datetime
 
+import sys
+sys.path.append('../other/')
+import connect
 # Connect to database
 con = connect.connector()
 
